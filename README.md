@@ -14,11 +14,18 @@ ___
 
 In this tutorial, we will build a Desktop app that will communicate with the blockchain to timestamp original files. The timestamp will serve as immutable proof that the files existed at a certain point in time, which can be used to demonstrate ownership of copyrighted material. You can view the completed project files [here](https://github.com/bitpay/i-made-this).
 
-#### Here is what we will need:
+#### What we need
 
 1. A [Bitcore](http://bitcore.io/) node to communicate with the blockchain
 2. A custom Bitcore service to extend your Bitcore node so that it can timestamp files
 3. [Electron](http://electron.atom.io) and [AngularJS](https://angularjs.org/) to serve as the Desktop UI to communicate with your Bitcore server
+
+#### How it works
+1. The user uploads a file via the UI.
+2. The UI hashes the file and asks Bitcore node whether the file hash already been timestamped in the blockchain.
+3. If the file has not yet been timestamped, the UI generates a new BTC address and displays that address to the user in the form of a qrcode, prompting the user to send a small amount of BTC to that address.
+4. Once the user's BTC arrives at the address, Bitcore node utilizes the user's BTC to broadcast a new transaction with the file hash included, serving as a permanent timestamp in the blockchain.
+
 
 ### Starting your project
 
