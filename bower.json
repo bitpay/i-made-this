@@ -1,0 +1,21 @@
+{
+  "name": "i-made-this",
+  "main": "main.js",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-qrcode": "monospaced/angular-qrcode#~6.0.3",
+    "font-awesome": "fontawesome#~4.4.0",
+    "qrcode-generator": "monospaced/qrcode-generator#~0.0.2",
+    "ng-file-upload": "~9.0.13",
+    "angular": "~1.4.7",
+    "bitcore": "~0.13.5"
+  }
+}
