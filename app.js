@@ -72,6 +72,7 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       delete $scope.files;
       $scope.stampSuccess = false;
       $scope.previousTimestamps = [];
+      $scope.pendingTimestamp = null;
       $scope.cancelStamp();
     }
 
