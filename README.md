@@ -6,6 +6,10 @@ Download this project with:
 
 `git clone git@github.com:bitpay/i-made-this.git`
 
+<p align="center">
+  <img src="/screenshot.png" />
+</p>
+
 ## Install
 
 #### Install and Run Bitcore Node
