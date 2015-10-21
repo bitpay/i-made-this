@@ -13,8 +13,16 @@ body {
 .transparent {
   background-color: rgba(255, 255, 255, 0.2); }
 
+.transparent:hover{
+  background-color: rgba(255, 255, 255, 0.26);
+}
+
 .green {
   background-color: #09C286; }
+
+.green:hover{
+  background-color: #06CC8C;
+}
 
 .rounded {
   border-radius: 10px;
@@ -36,6 +44,10 @@ body {
   -webkit-border-radius: 5px;
   color: #fff;
   font-size: 1em; }
+
+.btn:hover {
+  cursor: pointer;
+}
 
 .error {
   border: 2px solid red; }
