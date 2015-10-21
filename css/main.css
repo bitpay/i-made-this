@@ -1,266 +1,198 @@
-html, body{
-  font-family: Arial;
-  height: 100%;
+@font-face {
+  font-family: Titillium;
+  src: url(../TitilliumText400wt.otf);
+  font-weight: normal;
+ }
+body {
+  margin: 0;
+  overflow: hidden;
+}
+.shadow {
+  box-shadow: 0px 0px 46px 0px rgba(0, 0, 0, 0.7); }
+
+.transparent {
+  background-color: rgba(255, 255, 255, 0.2); }
+
+.transparent:hover{
+  background-color: rgba(255, 255, 255, 0.26);
 }
 
-/* General styles for the modal */
+.green {
+  background-color: #09C286; }
 
-/*
-Styles for the html/body for special modal where we want 3d effects
-Note that we need a container wrapping all content on the page for the
-perspective effects (not including the modals and the overlay).
-*/
-.md-perspective,
-.md-perspective body {
-	height: 100%;
-	overflow: hidden;
+.green:hover{
+  background-color: #06CC8C;
 }
 
-.md-perspective body  {
-	background: #222;
-	-webkit-perspective: 600px;
-	-moz-perspective: 600px;
-	perspective: 600px;
+.rounded {
+  border-radius: 10px;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px; }
+
+.opaque {
+  opacity: 0.8; }
+
+.clear-top {
+  margin: 60px auto 0; }
+
+.btn {
+  padding: 18px 45px;
+  border: 0px;
+  margin-top: 30px;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  color: #fff;
+  font-size: 1em; }
+
+.btn:hover {
+  cursor: pointer;
 }
+
+.error {
+  border: 2px solid red; }
+
+.hide {
+  display: none !important; }
+
+.close {
+  height: 30px;
+  position: relative;
+  top: 10px;
+  left: 30px;
+  display: block;
+  background: url(../img/close.svg);
+  background-repeat: no-repeat;
+  background-size: 15px
+ }
+
+body {
+  text-align: center;
+  color: #fff;
+  background-size: cover;
+  font-family: "Titillium", sans-serif;
+  font-size: 18px; }
+  body * {
+    box-sizing: border-box; }
+
+p {
+  width: 60%;
+  margin: auto;
+  padding: 30px 0 0;
+  opacity: 0.7;
+  filter: alpha(opacity=70);
+  line-height: 1.4em;
+  opacity: 1em;
+  font-size: 1em; }
+
+h1 {
+  display: block;
+  font-size: 2em;
+  line-height: 10px;
+  height: 44px;
+  margin-top: 49px; }
 
 .container {
-	background: #e74c3c;
-	min-height: 100%;
-}
+  max-width: 750px;
+  height: 690px;
+  margin: 0 auto;
+  display: block;
+  /*border-radius: 10px;*/
+  background-color: #1e5799;
+  background: url(../img/bg.png) center no-repeat; }
+  .container.success {
+    background: #09C286; }
 
-.md-modal {
-	position: fixed;
-	top: 50%;
-	left: 50%;
-	width: 50%;
-	max-width: 630px;
-	min-width: 320px;
-	height: auto;
-	z-index: 2000;
-	visibility: hidden;
-	-webkit-backface-visibility: hidden;
-	-moz-backface-visibility: hidden;
-	backface-visibility: hidden;
-	-webkit-transform: translateX(-50%) translateY(-50%);
-	-moz-transform: translateX(-50%) translateY(-50%);
-	-ms-transform: translateX(-50%) translateY(-50%);
-	transform: translateX(-50%) translateY(-50%);
-}
+.initial {
+  display: block;
+  width: 100%; }
+  .initial h1 {
+    display: block;
+    height: 0px;
+   }
+  .initial p {
+    padding: 10px 0 0; }
 
-.md-show {
-	visibility: visible;
-}
-
-.md-overlay {
-	position: fixed;
-	width: 100%;
-	height: 100%;
-	visibility: hidden;
-	top: 0;
-	left: 0;
-	z-index: 1000;
-	opacity: 0;
-	background: rgba(60, 60, 60, 0.8);
-	-webkit-transition: all 0.3s;
-	-moz-transition: all 0.3s;
-	transition: all 0.3s;
-}
-
-.md-show ~ .md-overlay {
-	opacity: 1;
-	visibility: visible;
-}
-
-/* Content styles */
-.md-content {
-	color: #fff;
-	background: #28be68;
-	position: relative;
-	border-radius: 3px;
-	margin: 0 auto;
-}
-
-.md-content h3 {
-	margin: 0;
-	padding: 0.4em;
-	text-align: center;
-	font-size: 2.4em;
-	font-weight: 300;
-	opacity: 0.8;
-	background: rgba(0,0,0,0.1);
-	border-radius: 3px 3px 0 0;
-}
-
-.md-content > div {
-	padding: 15px 40px 30px;
-	margin: 0;
-	font-weight: 300;
-	font-size: 1.15em;
-}
-
-.md-content > div p {
-	margin: 0;
-	padding: 10px 0;
-}
-
-.md-content > div ul {
-	margin: 0;
-	padding: 0 0 30px 20px;
-}
-
-.md-content > div ul li {
-	padding: 5px 0;
-}
-
-.md-content button {
-	display: block;
-	margin: 0 auto;
-	font-size: 0.8em;
-}
-
-/* Individual modal styles with animations/transitions */
-
-/* Effect 1: Fade in and scale up */
-.md-effect-1 .md-content {
-	-webkit-transform: scale(0.7);
-	-moz-transform: scale(0.7);
-	-ms-transform: scale(0.7);
-	transform: scale(0.7);
-	opacity: 0;
-	-webkit-transition: all 0.3s;
-	-moz-transition: all 0.3s;
-	transition: all 0.3s;
-}
-
-.md-show.md-effect-1 .md-content {
-	-webkit-transform: scale(1);
-	-moz-transform: scale(1);
-	-ms-transform: scale(1);
-	transform: scale(1);
-	opacity: 1;
-}
-
-.button {
-    -moz-appearance: button;
-    /* Firefox */
-    -webkit-appearance: button;
-    /* Safari and Chrome */
-    padding: 10px;
-    margin: 10px;
-    width: 70px;
-}
-.drop-box-wrapper{
-  height: 80%;
-  display: flex;
-}
-.drop-box {
-    background: #F8F8F8;
-    border: 8px dashed #DDD;
-    width: 100%;
-    height: 100%;
-    text-align: center;
-    padding-top: 25px;
-    margin: 10px;
-    display: flex;
-    border-radius: 36px;
-}
-
-.uploaded-file-wrapper{
-  align-self: center;
-  width: 100%;
-  align-items: center;
-  display: flex;
-  flex-direction:column;
-}
-
-.instructions{
-  align-self: center;
-  width: 100%;
-  font-family: Arial;
-  font-size: 50px;
-  color: #696969;
-}
-
-.instructions > .subheader{
-  margin-top: 20px;
-  font-size: 30px;
-  color: #AFAFAF;
-}
-
-.filename{
-  font-family: Arial;
-  margin-bottom: 20px;
-  font-size: 30px;
-  color: #AFAFAF;
-}
-
-.message{
-  align-self: center;
-  font-family: Arial;
-  font-size: 18px;
-  margin-top: 30px;
-  line-height: 30px;
-  color: #AFAFAF;
-  text-align: center;
-}
-
-.file{
-  align-self: center;
-}
+.preview {
+  margin-top: 15px;
+  max-height: 400px;
+  min-height: 400px;
+  width: 70%;
+  background: #211932;
+  display: block;
+  overflow: hidden;
+  position: relative;
+  border-radius: 10px;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  max-width: 700px; }
+  .preview img {
+    width: 100%; }
 
 .dragover {
-    border: 8px dashed darkgray;
+  border: 2px dashed rgba(255, 255, 255, 0.77)!important;
 }
 
-/* #Emerald Flat Button
-==================================================*/
-.emerald-flat-button {
-  display: inline-block;
-  margin-right: 10px;
-  font-family: arial;
-  position: relative;
-  vertical-align: top;
-  width: 154px;
-  padding: 12px;
-  font-size: 22px;
-  color: white;
+.file-type {
+  text-transform: uppercase;
+  width: 100%;
+  display: block;
+  height: 350px;
+  background: #3C2668 url(../img/file.svg) center no-repeat;
+  background-size: 50%;
+  padding-top: 32%;
+  font-size: 2.4em; }
+
+.file-name {
+  position: absolute;
+  bottom: 0px;
+  left: 0;
   text-align: center;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-  background: #2ecc71;
-  border: 0;
-  border-bottom: 2px solid #28be68;
+  width: 100%;
+  background: #211932;
+  padding: 10px 0; }
+
+.panel {
+  max-height: 370px;
+  max-width: 370px;
+  margin: 0 auto;
+  display: block;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  background: #fff; }
+  .panel img {
+    width: 100%;
+    padding: 5%; }
+  .panel.success img {
+    width: 50%;
+    margin: 20px auto 0px; }
+  .panel.success p {
+    color: #555;
+    padding: 20px 0 40px; }
+  .panel.scan{
+    padding: 75px 0;
+  }
+
+.dropbox {
+  display: block;
+  width: 400px;
+  padding: 140px 0;
+  border: 2px dashed rgba(255, 255, 255, 0.4);
+  background: url(../img/upload.svg) no-repeat center;
+  background-size: 50%;
+  border-radius: 5px;
+  margin: 10% auto 2%; }
+
+.view-transaction {
+  text-decoration: none;
+  margin-top: 1px;
+  display: block;
+  color: #6443A9;
   cursor: pointer;
-  -webkit-box-shadow: inset 0 -2px #28be68;
-  box-shadow: inset 0 -2px #28be68;
-  margin-bottom: 10px;
-}
-.emerald-flat-button:active {
-  top: 1px;
-  outline: none;
-  -webkit-box-shadow: none;
-  box-shadow: none;
 }
 
-.silver-flat-button {
-  position: relative;
-  vertical-align: top;
-  width: 154px;
-  /* height: 60px; */
-  padding: 12px;
-  font-size: 22px;
-  color:white;
-  text-align: center;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-  background: #bdc3c7;
-  border: 0;
-  border-bottom: 2px solid #acb2b7;
-  cursor: pointer;
-  -webkit-box-shadow: inset 0 -2px #acb2b7;
-  box-shadow: inset 0 -2px #acb2b7;
-}
-.silver-flat-button:active {
-  top: 1px;
-  outline: none;
-  -webkit-box-shadow: none;
-  box-shadow: none;
+.view-transaction > i{
+  font-size: 19px;
+  margin-left: 3px;
 }

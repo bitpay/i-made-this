@@ -1,7 +1,7 @@
 angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
 
 .run( function run () {
-  bitcore = require('bitcore');
+  bitcore = require('bitcore-lib');
 })
 
 .controller('MyCtrl', ['$scope', 'Upload', '$http', '$interval',
@@ -53,8 +53,15 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       // Wait for the user to upload a file
       if($scope.files && $scope.files[0]){
        file = $scope.files[0];
+       var typeToks = file.type.split('/');
+       var nameToks = file.name.split('.');
+       var ext = nameToks[nameToks.length - 1];
+       $scope.fileType = typeToks[0];
+       $scope.fileExtension = ext;
+
        hashFile(file, function(fileHashString){
          fileHash = fileHashString;
+         console.log('fileHash', fileHash)
          isFileInBlockchain(fileHash);
        });
       }
@@ -65,6 +72,7 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       delete $scope.files;
       $scope.stampSuccess = false;
       $scope.previousTimestamps = [];
+      $scope.pendingTimestamp = null;
       $scope.cancelStamp();
     }
 
@@ -134,6 +142,8 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       }));
 
       transaction2.sign(privateKey);
+      console.log('transaction2', transaction2);
+      $scope.transactionId = transaction2.id;
       var serializedTransaction = transaction2.checkedSerialize();
 
       sendTransaction(serializedTransaction);
@@ -150,6 +160,10 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
           pendingFileHashes[fileHash] = {date: new Date()};
         });
       }
+    }
+
+    $scope.openTransactionInBrowser = function(transactionId){
+      require("shell").openExternal("https://test-insight.bitpay.com/tx/" + transactionId);
     }
 
 }]);
