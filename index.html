@@ -66,7 +66,6 @@
               <h1>Stamp it!</h1>
               <div class="panel scan shadow ">
                 <qrcode class="qrcode" ng-hide="stampSuccess" data="{{address}}" size="200"></qrcode>
-                <!-- <img src="img/qr.png" /> -->
               </div>
               <p>To timestamp this file into the blockchain, use your favorite wallet to send 0.001 BTC to this address.</p>
             </div>
@@ -76,7 +75,9 @@
                 <h1>Success</h1>
               <div class="panel success shadow">
                 <img src="img/check.svg" />
-                <p>Congratulations! You’ve successfuly timestamped your file into the blockchain.</p>
+                <p>Congratulations! You’ve successfuly timestamped your file into the blockchain.
+                  <a class="view-transaction" ng-click="openTransactionInBrowser(transactionId)">View Transaction <i class="fa fa-angle-right"></i></a>
+                </p>
               </div>
               <button class="btn transparent" ng-click="cancel()">Stamp another File</button>
             </div>

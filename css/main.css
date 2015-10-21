@@ -183,3 +183,16 @@ h1 {
   background-size: 50%;
   border-radius: 5px;
   margin: 10% auto 2%; }
+
+.view-transaction {
+  text-decoration: none;
+  margin-top: 1px;
+  display: block;
+  color: #6443A9;
+  cursor: pointer;
+}
+
+.view-transaction > i{
+  font-size: 19px;
+  margin-left: 3px;
+}

@@ -142,6 +142,8 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       }));
 
       transaction2.sign(privateKey);
+      console.log('transaction2', transaction2);
+      $scope.transactionId = transaction2.id;
       var serializedTransaction = transaction2.checkedSerialize();
 
       sendTransaction(serializedTransaction);
@@ -158,6 +160,10 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
           pendingFileHashes[fileHash] = {date: new Date()};
         });
       }
+    }
+
+    $scope.openTransactionInBrowser = function(transactionId){
+      require("shell").openExternal("https://test-insight.bitpay.com/tx/" + transactionId);
     }
 
 }]);
