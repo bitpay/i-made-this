@@ -24,19 +24,16 @@
         <br>
             <!--Initial -->
 
-          <div class="screen initial " ng-hide="files[0]">
+          <div class="screen initial" ng-hide="files[0]">
 
                 <h1>What did you make today?</h1>
                 <p>Drop your file here to upload</p>
                 <div ngf-drop ngf-select ng-model="files" class="dropbox"
                     ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true"
-                    accept="image/*,application/pdf"
-                    ngf-pattern="'image/*,application/pdf'">
+                    >
                 </div>
                 <button ngf-select ng-model="files" class="btn transparent"
                 ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true"
-                accept="image/*,application/pdf"
-                ngf-pattern="'image/*,application/pdf'"
                 >Upload file</button>
               </div>
 
@@ -46,10 +43,10 @@
             <!--Preview -->
             <div ng-show="files[0] && !stamping">
 
-              <div class=" preview clear-top shadow error">
+              <div class="preview clear-top shadow" ng-class="{'error': previousTimestamps[0]}">
                 <span class="file-name">{{files[0].name}}</span>
-                <img ng-show="files[0]" ngf-src="files[0]" class="" />
-                <span class="file-type hide">JS</span>
+                <img ng-show="fileType == 'image'" ngf-src="files[0]" class="" />
+                <span class="file-type" ng-hide="fileType == 'image'">{{fileExtension}}</span>
               </div>
               <p>This file has not yet been time stamped in the blockchain. Would you like to timestamp it?</p>
               <button class="btn green" ng-click="stampFile()">Stamp it!</button>

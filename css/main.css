@@ -129,7 +129,12 @@ h1 {
   .preview img {
     width: 100%; }
 
+.dragover {
+  border: 2px dashed rgba(255, 255, 255, 0.77)!important;
+}
+
 .file-type {
+  text-transform: uppercase;
   width: 100%;
   display: block;
   height: 350px;

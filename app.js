@@ -2,7 +2,6 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
 
 .run( function run () {
   bitcore = require('bitcore-lib');
-  console.log('window.innerHeight', window.innerHeight);
 })
 
 .controller('MyCtrl', ['$scope', 'Upload', '$http', '$interval',
@@ -51,10 +50,15 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
     }
 
     $scope.$watch('files', function () {
-      console.log('in watch', $scope.files)
       // Wait for the user to upload a file
       if($scope.files && $scope.files[0]){
        file = $scope.files[0];
+       var typeToks = file.type.split('/');
+       var nameToks = file.name.split('.');
+       var ext = nameToks[nameToks.length - 1];
+       $scope.fileType = typeToks[0];
+       $scope.fileExtension = ext;
+
        hashFile(file, function(fileHashString){
          fileHash = fileHashString;
          console.log('fileHash', fileHash)
