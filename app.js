@@ -1,7 +1,7 @@
 angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
 
 .run( function run () {
-  bitcore = require('bitcore');
+  bitcore = require('bitcore-lib');
 })
 
 .controller('MyCtrl', ['$scope', 'Upload', '$http', '$interval',
