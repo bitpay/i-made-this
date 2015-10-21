@@ -1,4 +1,4 @@
-# i-made-this
+# I Made This
 
 This repo contains the completed project files for the [*I Made This* Bitcore tutorial](https://bitcore.io/guides/i-made-this). *I Made This* is an [electron](http://electron.atom.io) app that leverages [Bitcore](https://bitcore.io) to timestamp files in the blockchain.
 
@@ -18,7 +18,7 @@ cd ~/mynode/node_modules
 ln -s ~/i-made-this/stampingservice
 ```
 
-Add `StampingService` as a dependency in `~/mynode/bitcore-node.json`:
+Add `StampingService` as a dependency in `~/mynode/bitcore-node.json`
 
 ```json
 {
