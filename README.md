@@ -44,11 +44,12 @@ bitcore-node start
 #### Install the Electron App
 
 ```
-cd i-made-this
 npm install electron-prebuilt -g
+
+cd i-made-this
 npm install
 bower install
 electron .
 ```
 
-To learn how to create this project from scratch, [read the tutorial](http://www.bitcore.io/i-made-this).
+To learn how to create this project from scratch, [read the tutorial](http://www.bitcore.io/guides/i-made-this).
