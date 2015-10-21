@@ -18,7 +18,7 @@ cd ~/mynode/node_modules
 ln -s ~/i-made-this/stampingservice
 ```
 
-Add `StampingService` as a dependency in `~/mynode/bitcore-node.json`
+Add `stampingservice` as a dependency in `~/mynode/bitcore-node.json`
 
 ```json
 {
@@ -30,19 +30,28 @@ Add `StampingService` as a dependency in `~/mynode/bitcore-node.json`
     "db",
     "address",
     "web",
-    "StampingService"
+    "stampingservice"
   ]
 }
+```
+
+Run npm install from within the `stampingservice` directory:
+
+```
+cd ~/i-made-this/stampingservice
+npm install
 ```
 
 Start your bitcore-node from within the ```~/mynode``` directory
 
 ```
+cd ~/mynode
 bitcore-node start
 ```
 
 #### Install the Electron App
 
+In a new terminal tab or window, run:
 ```
 npm install electron-prebuilt -g
 
