@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="203px" height="203px" viewBox="0 0 203 203" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.3.3 (12081) - http://www.bohemiancoding.com/sketch -->
+    <title>check + Oval 13</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="Success" sketch:type="MSArtboardGroup" transform="translate(-501.000000, -339.000000)">
+            <g id="check-+-Oval-13" sketch:type="MSLayerGroup" transform="translate(502.000000, 340.000000)">
+                <path d="M50.720118,107.934132 C49.3492927,109.761899 48.7617961,111.916053 49.0881831,114.135484 C49.4145701,116.354916 50.5895632,118.313238 52.3520529,119.684063 L85.7740799,144.750583 C87.5365696,146.056131 89.8865558,146.643628 92.1059873,146.317241 C94.3254188,145.925576 96.3490181,144.685306 97.654566,142.857539 L147.722329,71.8357316 C150.398702,68.0496426 149.484819,62.8274509 145.764007,60.1510776 C142.108473,57.6052591 136.625172,58.5844201 134.079353,62.1746769 L88.9073949,126.146525 L62.404772,106.302197 C60.9033918,105.192481 59.2061795,104.604985 57.3784124,104.604985 C54.7020392,104.604985 52.2867755,105.845255 50.720118,107.934132 Z" id="check" fill="#09C286" sketch:type="MSShapeGroup"></path>
+                <circle id="Oval-13" stroke="#09C286" sketch:type="MSShapeGroup" cx="100.5" cy="100.5" r="100.5"></circle>
+            </g>
+        </g>
+    </g>
+</svg>

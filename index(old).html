@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html ng-app="iMadeThis">
+  <head>
+    <meta charset="UTF-8">
+    <title>I Made This</title>
+
+    <link href="bower_components/font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
+
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/ng-file-upload/ng-file-upload.js"></script>
+    <script src="bower_components/bitcore-lib/bitcore-lib.js"></script>
+    <script src="bower_components/qrcode-generator/js/qrcode.js"></script>
+    <script src="bower_components/angular-qrcode/angular-qrcode.js"></script>
+    <script src="app.js"></script>
+  </head>
+
+  <body ng-controller="MyCtrl">
+    <div class="drop-box-wrapper" ng-hide="files[0]">
+      <div ngf-drop ngf-select ng-model="files" class="drop-box"
+          ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true"
+          accept="image/*,application/pdf"
+          ngf-pattern="'image/*,application/pdf'">
+
+          <div class="instructions">
+            <div>What did you make today?</div>
+            <div class="subheader">Drop your file here or click to upload</div>
+          </div>
+
+      </div>
+      <div ngf-no-file-drop>File Drag/Drop is not supported for this browser</div>
+    </div>
+
+    <div ng-show="files[0]" class="uploaded-file-wrapper">
+      <div class="filename">{{files[0].name}}</div>
+      <img class="file" ng-show="files[0]" ngf-src="files[0]" style="max-height: 300px; max-width: 80%;">
+      <div class="message">
+        <span ng-hide="previousTimestamps[0] || pendingTimestamp">
+          This file has not yet been timestamped in the blockchain. Would you like to timestamp it?
+        </span>
+        <span ng-hide="previousTimestamps.length > 0 || !pendingTimestamp">
+          This file has been sent to the bitcoin network for timestamping, but has not yet been confirmed. Confirmations
+          usually take approximately 10 minutes. Check back soon!
+        </span>
+        <span ng-show="previousTimestamps[0]">
+          This file was first timestamped into the blockchain on
+          <strong>{{previousTimestamps[0].date | date:'medium'}}</strong>.
+          <span ng-show="previousTimestamps.length > 1">
+            It has since been timestamped <strong>{{previousTimestamps.length - 1}}</strong> additional time<span ng-show="previousTimestamps.length > 2">s</span>.
+            <a href="#">Prove ownership</a> of this file by entering the private key you used to timestamp the file.
+          </span>
+           Would you like to
+          timestamp it again?
+        </span>
+      </div>
+      <div style="margin-top: 30px;">
+        <div class="emerald-flat-button" ng-click="stampFile()">
+          Stamp it!
+        </div>
+        <div class="silver-flat-button" style="display: inline-block;" ng-click="cancel()">
+          Cancel
+        </div>
+      </div>
+    </div>
+
+    <div class="md-modal md-effect-1" id="modal-1" ng-class="{'md-show': stamping}">
+      <div class="md-content" >
+        <h3 ng-click="cancelStamp()" ng-hide="stampSuccess">Stamp it!</h3>
+        <h3 ng-click="cancelStamp()" ng-show="stampSuccess">Stamp Success</h3>
+        <div style="display: flex; flex-direction: column;">
+          <p ng-hide="stampSuccess">
+            To timestamp this file into the blockchain, use your favorite wallet to send <strong>0.001 BTC</strong>
+            to this address:
+          </p>
+          <p ng-show="stampSuccess">
+            Congratulations! You've successfuly timestamped your file into the blockchain.
+          </p>
+          <qrcode ng-hide="stampSuccess" data="{{address}}" size="200" style="margin: 10px; align-self:center;"></qrcode>
+          <div ng-show="stampSuccess" class="silver-flat-button" style="margin-top: 20px; width: auto;" ng-click="cancel()">
+            Stamp Another File
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="md-overlay"></div>
+  </body>
+</html>

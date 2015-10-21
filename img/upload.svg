@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="280px" height="317px" viewBox="0 0 280 317" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.3.3 (12081) - http://www.bohemiancoding.com/sketch -->
+    <title>Rectangle 10 + Arrow Copy 2 + Triangle 1</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <filter x="-50%" y="-50%" width="200%" height="200%" filterUnits="objectBoundingBox" id="filter-1">
+            <feOffset dx="0" dy="2" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="19.5" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.10592731 0" in="shadowBlurOuter1" type="matrix" result="shadowMatrixOuter1"></feColorMatrix>
+            <feMerge>
+                <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="Initial" sketch:type="MSArtboardGroup" transform="translate(-447.000000, -460.000000)">
+            <g id="Rectangle-10-+-Arrow-Copy-2-+-Triangle-1" sketch:type="MSLayerGroup" transform="translate(480.000000, 490.000000)">
+                <path d="M0,7.00302403 C0,3.6876454 2.68109247,1 5.99193397,1 L162.268768,1 L214,52.9824219 L214,246.003155 C214,249.315121 211.313651,252 207.99671,252 L6.00329005,252 C2.68776451,252 0,249.308998 0,245.996976 L0,7.00302403 Z" id="Rectangle-10" opacity="0.9" fill="#3C2668" filter="url(#filter-1)" sketch:type="MSShapeGroup"></path>
+                <g id="Arrow-Copy-2" transform="translate(106.500000, 131.000000) scale(-1, 1) rotate(-90.000000) translate(-106.500000, -131.000000) translate(62.000000, 108.000000)" stroke="#FFFFFF" stroke-width="3" sketch:type="MSShapeGroup" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1.53448276,22.5 L87.4804151,22.5 L1.53448276,22.5 Z M60.3176954,45.3233492 L87.9871916,22.1879123 L60.3176954,45.3233492 Z M59.7599705,0.0956816439 L88.0673244,21.9056536 L59.7599705,0.0956816439 Z" id="Line"></path>
+                </g>
+                <polygon id="Triangle-1" fill-opacity="0.281221694" fill="#000000" sketch:type="MSShapeGroup" points="160.246094 0.5 213.246094 53.9082031 160.246094 53.9082031 "></polygon>
+            </g>
+        </g>
+    </g>
+</svg>
