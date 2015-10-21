@@ -3,9 +3,7 @@
   "version": "0.0.0",
   "description": "A Bitcore tutorial illustrating how to timestamp files in the blockchain",
   "main": "main.js",
-  "dependencies": {
-    "async": "^1.4.2"
-  },
+  "dependencies": {},
   "repository": {
     "type": "git",
     "url": "git://github.com/bitpay/i-made-this.git"
