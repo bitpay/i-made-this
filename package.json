@@ -1,0 +1,19 @@
+{
+  "name": "i-made-this",
+  "version": "0.0.0",
+  "description": "A Bitcore tutorial illustrating how to timestamp files in the blockchain",
+  "main": "main.js",
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bitpay/i-made-this.git"
+  },
+  "keywords": [
+    "bitcore"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bitpay/i-made-this/issues"
+  },
+  "homepage": "https://github.com/bitpay/i-made-this"
+}
