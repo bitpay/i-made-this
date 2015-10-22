@@ -18,8 +18,7 @@ Download this project with:
 Assuming the created Bitcore node is called `mynode` and resides in your home directory, Symlink the i-made-this `stampingservice` into the node_modules directory of `~/mynode`
 
 ```
-cd ~/mynode/node_modules
-ln -s ~/i-made-this/stampingservice
+ln -s ~/mynode/node_modules ~/i-made-this/stampingservice
 ```
 
 Add `stampingservice` as a dependency in `~/mynode/bitcore-node.json`
