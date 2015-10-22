@@ -169,4 +169,16 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       require('shell').openExternal('https://test-insight.bitpay.com/tx/' + transactionId);
     };
 
+    // Prevent files that are dragged into the electron browser window
+    // from being loaded into the browser if we are not in the preliminary
+    // upload state
+    window.addEventListener("dragover",function(e){
+      e = e || event;
+      e.preventDefault();
+    },false);
+    window.addEventListener("drop",function(e){
+      e = e || event;
+      e.preventDefault();
+    },false);
+
 }]);
