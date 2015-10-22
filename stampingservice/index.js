@@ -1,3 +1,5 @@
+'use strict';
+
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var async = require('async');
@@ -6,7 +8,7 @@ var async = require('async');
 // are no collisions with the bitcore namespace (0-255 is reserved by bitcore)
 var PREFIX = String.fromCharCode(0xff) + 'StampingService';
 
-function enableCors(response){
+function enableCors(response) {
   // A convenience function to ensure
   // the response object supports cross-origin requests
   response.set('Access-Control-Allow-Origin','*');
@@ -23,13 +25,13 @@ util.inherits(StampingService, EventEmitter);
 
 StampingService.dependencies = ['bitcoind', 'db', 'web'];
 
-StampingService.prototype.getAPIMethods = function(){
+StampingService.prototype.getAPIMethods = function() {
   return [];
-}
+};
 
-StampingService.prototype.getPublishEvents = function(){
+StampingService.prototype.getPublishEvents = function() {
   return [];
-}
+};
 
 StampingService.prototype.blockHandler = function(block, add, callback) {
   /*
@@ -93,17 +95,17 @@ StampingService.prototype.blockHandler = function(block, add, callback) {
     callback(null, operations);
   });
 
-}
+};
 
 StampingService.prototype.getRoutePrefix = function() {
   return 'stampingservice';
-}
+};
 
 StampingService.prototype.setupRoutes = function(app) {
   app.get('/hash/:hash', this.lookupHash.bind(this));
   app.get('/address/:address', this.getAddressData.bind(this));
   app.get('/send/:transaction', this.sendTransaction.bind(this));
-}
+};
 
 StampingService.prototype.lookupHash = function(req, res, next) {
   /*
@@ -130,7 +132,7 @@ StampingService.prototype.lookupHash = function(req, res, next) {
       // Parse data as matches are found and push it
       // to the objArr
       data.key = data.key.split('-');
-      obj = {
+      var obj = {
         hash: data.value,
         height: data.key[2],
         txid: data.key[3],
@@ -157,13 +159,13 @@ StampingService.prototype.lookupHash = function(req, res, next) {
 
     // For each transaction that included our file hash, get additional
     // info from the blockchain about the transaction (such as the timestamp and source address).
-    async.each(objArr, function(obj, eachCallback){
+    async.each(objArr, function(obj, eachCallback) {
       var txid = obj.txid;
       var includeMempool = true;
 
       node.services.db.getTransactionWithBlockInfo(txid, includeMempool, function(err, transaction) {
-        if(err){
-          eachCallback(err);
+        if (err){
+          return eachCallback(err);
         }
 
         var script = transaction.inputs[0].script;
@@ -172,9 +174,9 @@ StampingService.prototype.lookupHash = function(req, res, next) {
         obj.sourceAddress = address;
         obj.timestamp = transaction.__timestamp;
         return eachCallback();
-      })
-    }, function doneGrabbingTransactionData(err){
-      if(err){
+      });
+    }, function doneGrabbingTransactionData(err) {
+      if (err){
         return res.send(500, err);
       }
 
@@ -183,7 +185,7 @@ StampingService.prototype.lookupHash = function(req, res, next) {
     });
 
   });
-}
+};
 
 StampingService.prototype.getAddressData = function(req, res, next) {
   /*
@@ -194,13 +196,13 @@ StampingService.prototype.getAddressData = function(req, res, next) {
   var addressService = this.node.services.address;
   var address = req.params.address;
   addressService.getUnspentOutputs(address, true, function(err, unspentOutputs) {
-    if(err){
-      console.log('err', err);
+    if (err){
+      return console.log('err', err);
     }
 
     res.send(unspentOutputs);
   });
-}
+};
 
 StampingService.prototype.sendTransaction = function(req, res, next){
   enableCors(res);
@@ -209,21 +211,21 @@ StampingService.prototype.sendTransaction = function(req, res, next){
   try {
     this.node.services.bitcoind.sendTransaction(serializedTransaction);
   } catch(err) {
-    if(err){
+    if (err){
       console.log('error sending transaction', err);
       return res.send(500, err);
     }
   }
 
   res.send(200);
-}
+};
 
 StampingService.prototype.start = function(callback) {
   setImmediate(callback);
-}
+};
 
 StampingService.prototype.stop = function(callback) {
   setImmediate(callback);
-}
+};
 
 module.exports = StampingService;

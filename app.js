@@ -1,3 +1,5 @@
+'use strict';
+var bitcore;
 angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
 
 .run( function run () {
@@ -30,7 +32,7 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       // Asks bitcore-node if the hash of the uploaded file has been timestamped in the bockchain before
       $http.get(bitcoreServiceBasePath + '/hash/' + fileHashString)
         .success(gotFile)
-        .error(didNotGetFile)
+        .error(didNotGetFile);
 
       function gotFile(data, statusCode){
         $scope.previousTimestamps = data;
@@ -61,7 +63,7 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
 
        hashFile(file, function(fileHashString){
          fileHash = fileHashString;
-         console.log('fileHash', fileHash)
+         console.log('fileHash', fileHash);
          isFileInBlockchain(fileHash);
        });
       }
@@ -74,7 +76,7 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       $scope.previousTimestamps = [];
       $scope.pendingTimestamp = null;
       $scope.cancelStamp();
-    }
+    };
 
     $scope.cancelStamp = function(){
       // Exits stamping mode for the current file
@@ -110,7 +112,7 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       pollInterval = $interval(function(){
         console.log('montiorAddress interval called for address:', address);
         $http.get(bitcoreServiceBasePath + '/address/' + address)
-          .success(gotAddressInfo)
+          .success(gotAddressInfo);
       }, 1000);
     }
 
@@ -153,7 +155,7 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
     function sendTransaction(serializedTransaction){
       // Asks bitcore-node to broadcast the timestamped transaction
       $http.get(bitcoreServiceBasePath + '/send/' + serializedTransaction)
-        .success(sentTransaction)
+        .success(sentTransaction);
 
       function sentTransaction(){
         montiorAddress(changeAddress, function(unspentOutput){
@@ -164,7 +166,7 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
     }
 
     $scope.openTransactionInBrowser = function(transactionId){
-      require("shell").openExternal("https://test-insight.bitpay.com/tx/" + transactionId);
-    }
+      require('shell').openExternal('https://test-insight.bitpay.com/tx/' + transactionId);
+    };
 
 }]);

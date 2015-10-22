@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "A Bitcore tutorial illustrating how to timestamp files in the blockchain",
   "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
   "dependencies": {},
   "repository": {
     "type": "git",
