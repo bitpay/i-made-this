@@ -13,7 +13,7 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
     var file; // represents the uploaded file
     var fileHash; // a hash of the uploaded file
     var pollInterval; // $interval promise that needs to be canceled if user exits stamping mode
-    var privateKey; // the private key of the generated address
+    var privateKey1; // the private key of the generated address
     var changeAddress; // a randomly generated address to where any excess stamping funds go
 
     function hashFile(file, cb){
@@ -87,12 +87,12 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       // that the user can send the app enough BTC for timestamping
       $scope.stamping = true;
 
-      privateKey = new bitcore.PrivateKey();
-      var publicKey = new bitcore.PublicKey(privateKey);
+      privateKey1 = new bitcore.PrivateKey();
+      var publicKey = new bitcore.PublicKey(privateKey1);
       $scope.address = new bitcore.Address(publicKey, bitcore.Networks.testnet).toString();
 
       montiorAddress($scope.address, function(unspentOutputs){
-        timeStampFile(unspentOutputs);
+        timeStampFile(unspentOutputs, privateKey1);
       });
 
     };
@@ -114,7 +114,7 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       }, 1000);
     }
 
-    function timeStampFile(unspentOutput){
+    function timeStampFile(unspentOutput, privateKey1){
       // Uses the BTC received from the user to create a new transaction object
       // that includes the hash of the uploaded file
       var UnspentOutput = bitcore.Transaction.UnspentOutput;
@@ -141,8 +141,9 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
         satoshis: 0
       }));
 
-      transaction2.sign(privateKey);
-      console.log('transaction2', transaction2);
+      // Sign transaction with the original private key that generated
+      // the address to which the user sent BTC
+      transaction2.sign(privateKey1);
       $scope.transactionId = transaction2.id;
       var serializedTransaction = transaction2.checkedSerialize();
 
