@@ -50,8 +50,8 @@
               </div>
               <p ng-hide="previousTimestamps[0] || pendingTimestamp">This file has not yet been time stamped in the blockchain. Would you like to timestamp it?</p>
               <p ng-hide="previousTimestamps.length > 0 || !pendingTimestamp">
-                This file has been sent to the bitcoin network for timestamping, but has not yet been confirmed. Confirmations
-                usually take approximately 10 minutes. Check back soon!
+                A transaction containing the hash of this file has been sent to the bitcoin network for timestamping,
+                but has not yet been confirmed. Confirmations usually take approximately 10 minutes. Check back soon!
               </p>
               <p ng-show="previousTimestamps[0]">
                 This file was first timestamped into the blockchain on
