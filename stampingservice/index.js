@@ -5,7 +5,7 @@ var EventEmitter = require('events').EventEmitter;
 var async = require('async');
 
 // A prefix for our level db file hash keys to ensure there
-// are no collisions the bitcore namespace (0-255 is reserved by bitcore)
+// are no collisions with the bitcore namespace (0-255 is reserved by bitcore)
 var PREFIX = String.fromCharCode(0xff) + 'StampingService';
 
 function enableCors(response) {
@@ -46,61 +46,54 @@ StampingService.prototype.blockHandler = function(block, add, callback) {
     store that ships with bitcore.
 
   */
-  if (!add) {
-    setImmediate(function() {
-      callback(null, []);
-    });
-  } else {
 
-    var operations = [];
-    var txs = block.transactions;
-    var height = block.__height;
+  var operations = [];
+  var txs = block.transactions;
+  var height = block.__height;
 
-    // Loop through every transaction in the block
-    var transactionLength = txs.length;
-    for (var i = 0; i < transactionLength; i++) {
-      var tx = txs[i];
-      var txid = tx.id;
-      var outputs = tx.outputs;
-      var outputScriptHashes = {};
-      var outputLength = outputs.length;
+  // Loop through every transaction in the block
+  var transactionLength = txs.length;
+  for (var i = 0; i < transactionLength; i++) {
+    var tx = txs[i];
+    var txid = tx.id;
+    var outputs = tx.outputs;
+    var outputScriptHashes = {};
+    var outputLength = outputs.length;
 
-      // Loop through every output in the transaction
-      for (var outputIndex = 0; outputIndex < outputLength; outputIndex++) {
-        var output = outputs[outputIndex];
-        var script = output.script;
+    // Loop through every output in the transaction
+    for (var outputIndex = 0; outputIndex < outputLength; outputIndex++) {
+      var output = outputs[outputIndex];
+      var script = output.script;
 
-        if (!script || !script.isDataOut()) {
-          this.node.log.debug('Invalid script');
-          continue;
-        }
-
-        // If we find outputs with script data, we need to store the transaction into level db
-        var scriptData = script.getData().toString('hex');
-        this.node.log.info('scriptData added to in-memory index:', scriptData);
-
-        // Prepend a prefix to the key to prevent namespacing collisions
-        // Append the block height, txid, and outputIndex for ordering purposes (ensures transactions will be returned
-        // in the order they occured)
-        var key = [PREFIX, scriptData, height, txid, outputIndex].join('-');
-        var value = block.hash;
-
-        var action = add ? 'put' : 'del';
-        var operation = {
-          type: action,
-          key: key,
-          value: value
-        };
-
-        operations.push(operation);
+      if(!script || !script.isDataOut()) {
+        this.node.log.debug('Invalid script');
+        continue;
       }
-    }
-    setImmediate(function() {
-      // store transactions with script data into level db
-      callback(null, operations);
-    });
 
+      // If we find outputs with script data, we need to store the transaction into level db
+      var scriptData = script.getData().toString('hex');
+      this.node.log.info('scriptData added to in-memory index:', scriptData);
+
+      // Prepend a prefix to the key to prevent namespacing collisions
+      // Append the block height, txid, and outputIndex for ordering purposes (ensures transactions will be returned
+      // in the order they occured)
+      var key = [PREFIX, scriptData, height, txid, outputIndex].join('-');
+      var value = block.hash;
+
+      var action = add ? 'put' : 'del';
+      var operation = {
+        type: action,
+        key: key,
+        value: value
+      };
+
+      operations.push(operation);
+    }
   }
+  setImmediate(function() {
+    // store transactions with script data into level db
+    callback(null, operations);
+  });
 
 };
 
