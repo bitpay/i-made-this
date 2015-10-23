@@ -15,8 +15,7 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
     var file; // represents the uploaded file
     var fileHash; // a hash of the uploaded file
     var pollInterval; // $interval promise that needs to be canceled if user exits stamping mode
-    var privateKey1; // the private key of the generated address
-    var changeAddress; // a randomly generated address to where any excess stamping funds go
+    var privateKey; // the private key of the generated address
 
     function hashFile(file, cb){
       Upload.base64DataUrl(file).then(function(urls){
@@ -89,12 +88,12 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       // that the user can send the app enough BTC for timestamping
       $scope.stamping = true;
 
-      privateKey1 = new bitcore.PrivateKey();
-      var publicKey = new bitcore.PublicKey(privateKey1);
+      privateKey = new bitcore.PrivateKey();
+      var publicKey = new bitcore.PublicKey(privateKey);
       $scope.address = new bitcore.Address(publicKey, bitcore.Networks.testnet).toString();
 
       montiorAddress($scope.address, function(unspentOutputs){
-        timeStampFile(unspentOutputs, privateKey1);
+        timeStampFile(unspentOutputs, privateKey);
       });
 
     };
@@ -116,26 +115,19 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       }, 1000);
     }
 
-    function timeStampFile(unspentOutput, privateKey1){
+    function timeStampFile(unspentOutput, privateKey){
       // Uses the BTC received from the user to create a new transaction object
       // that includes the hash of the uploaded file
       var UnspentOutput = bitcore.Transaction.UnspentOutput;
       var Transaction = bitcore.Transaction;
-      var Address = bitcore.Address;
-
-      var privateKey2 = new bitcore.PrivateKey();
-      var publicKey2 = new bitcore.PublicKey(privateKey2);
-      var change = new bitcore.Address(publicKey2, bitcore.Networks.testnet);
-
-      changeAddress = change.toString();
-
       var unspent2 = UnspentOutput(unspentOutput);
 
+      // Let's create a transaction that sends all recieved BTC to a miner
+      // (no coins will go to a change address)
       var transaction2 = Transaction();
       transaction2
         .from(unspent2)
-        .fee(50000)
-        .change(change);
+        .fee(50000);
 
       // Append the hash of the file to the transaction
       transaction2.addOutput(new Transaction.Output({
@@ -145,7 +137,7 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
 
       // Sign transaction with the original private key that generated
       // the address to which the user sent BTC
-      transaction2.sign(privateKey1);
+      transaction2.sign(privateKey);
       $scope.transactionId = transaction2.id;
       var serializedTransaction = transaction2.checkedSerialize();
 
@@ -158,10 +150,8 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
         .success(sentTransaction);
 
       function sentTransaction(){
-        montiorAddress(changeAddress, function(unspentOutput){
-          $scope.stampSuccess = true;
-          pendingFileHashes[fileHash] = {date: new Date()};
-        });
+        $scope.stampSuccess = true;
+        pendingFileHashes[fileHash] = {date: new Date()};
       }
     }
 
