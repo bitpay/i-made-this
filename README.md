@@ -49,7 +49,7 @@ Start your bitcore-node from within the ```~/mynode``` directory
 
 ```
 cd ~/mynode
-bitcore-node start
+bitcored
 ```
 
 #### Install the Electron App
