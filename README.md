@@ -64,4 +64,4 @@ bower install
 electron .
 ```
 
-To learn how to create this project from scratch, [read the tutorial](http://www.bitcore.io/guides/i-made-this).
+To learn how to create this project from scratch, [read the tutorial](https://bitcore.io/guides/i-made-this).
