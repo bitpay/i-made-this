@@ -92,13 +92,13 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       var publicKey = new bitcore.PublicKey(privateKey);
       $scope.address = new bitcore.Address(publicKey, bitcore.Networks.testnet).toString();
 
-      montiorAddress($scope.address, function(unspentOutputs){
+      monitorAddress($scope.address, function(unspentOutputs){
         timeStampFile(unspentOutputs, privateKey);
       });
 
     };
 
-    function montiorAddress(address, cb){
+    function monitorAddress(address, cb){
       // Asks bitcore-node whether the input BTC address has received funds from the user
       function gotAddressInfo(data, statusCode){
         if(data.length){
@@ -109,7 +109,7 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       }
 
       pollInterval = $interval(function(){
-        console.log('montiorAddress interval called for address:', address);
+        console.log('monitorAddress interval called for address:', address);
         $http.get(bitcoreServiceBasePath + '/address/' + address)
           .success(gotAddressInfo);
       }, 1000);
