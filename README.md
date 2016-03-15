@@ -7,7 +7,12 @@ Download this project with:
 `git clone git@github.com:bitpay/i-made-this.git`
 
 <p align="center">
-  <img src="/screenshot.png" />
+  <img src="/screenshots/upload.png" />
+  <img src="/screenshots/uploaded.png" />
+  <img src="/screenshots/awaiting.png" />
+  <img src="/screenshots/stamped.png" />
+  <img src="/screenshots/confirming.png" />
+  <img src="/screenshots/already-stamped.png" />
 </p>
 
 ## Install

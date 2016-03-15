@@ -7,6 +7,9 @@ body {
   margin: 0;
   overflow: hidden;
 }
+button {
+  font-family: Titillium;
+}
 .shadow {
   box-shadow: 0px 0px 46px 0px rgba(0, 0, 0, 0.7); }
 
