@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/bitpay/i-made-this/issues"
   },
-  "homepage": "https://github.com/bitpay/i-made-this"
+  "homepage": "https://github.com/bitpay/i-made-this",
+  "devDependencies": {
+    "electron-prebuilt": "^0.34.1"
+  }
 }

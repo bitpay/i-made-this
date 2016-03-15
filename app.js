@@ -139,7 +139,7 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       // the address to which the user sent BTC
       transaction2.sign(privateKey);
       $scope.transactionId = transaction2.id;
-      var serializedTransaction = transaction2.checkedSerialize();
+      var serializedTransaction = transaction2.uncheckedSerialize();
 
       sendTransaction(serializedTransaction);
     }
