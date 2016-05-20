@@ -1,5 +1,9 @@
 {
   "dependencies": {
-    "async": "^1.4.2"
+    "async": "^1.4.2",
+    "bitcore-lib": "^0.13.15",
+    "leveldown": "^1.4.6",
+    "levelup": "^1.3.2",
+    "mkdirp": "^0.5.1"
   }
 }
