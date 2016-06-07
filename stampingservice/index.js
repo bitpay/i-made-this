@@ -2,11 +2,16 @@
 
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
+var fs = require('fs');
 var async = require('async');
-
-// A prefix for our level db file hash keys to ensure there
-// are no collisions with the bitcore namespace (0-255 is reserved by bitcore)
-var PREFIX = String.fromCharCode(0xff) + 'StampingService';
+var levelup = require('levelup');
+var leveldown = require('leveldown');
+var mkdirp = require('mkdirp');
+var bitcore = require('bitcore-lib');
+var BufferUtil = bitcore.util.buffer;
+var Networks = bitcore.Networks;
+var Block = bitcore.Block;
+var $ = bitcore.util.preconditions;
 
 function enableCors(response) {
   // A convenience function to ensure
@@ -17,37 +22,161 @@ function enableCors(response) {
 }
 
 function StampingService(options) {
-  EventEmitter.call(this);
+  if (!(this instanceof StampingService)) {
+    return new StampingService(options);
+  }
+  if (!options) {
+    options = {};
+  }
+
   this.node = options.node;
-  this.data = {};
+  this.name = options.name;
+
+  EventEmitter.call(this);
+
+  this.tip = null;
+  this.genesis = null;
+
+  $.checkState(this.node.network, 'Node is expected to have a "network" property');
+  this.network = this.node.network;
+
+  this._setDataPath();
+
+  this.levelupStore = leveldown;
+  if (options.store) {
+    this.levelupStore = options.store;
+  }
+  this.retryInterval = 60000;
+  this.log = this.node.log;
 }
 util.inherits(StampingService, EventEmitter);
 
-StampingService.dependencies = ['bitcoind', 'db', 'web'];
+StampingService.dependencies = ['bitcoind'];
 
-StampingService.prototype.getAPIMethods = function() {
-  return [];
+StampingService.PREFIX_TIP = new Buffer('04', 'hex');
+StampingService.PREFIX = String.fromCharCode(0xff);
+
+/**
+ * This function will set `this.dataPath` based on `this.node.network`.
+ * @private
+ */
+StampingService.prototype._setDataPath = function() {
+  $.checkState(this.node.services.bitcoind.spawn.datadir, 'bitcoind is expected to have a "spawn.datadir" property');
+  var datadir = this.node.services.bitcoind.spawn.datadir;
+  if (this.node.network === Networks.livenet) {
+    this.dataPath = datadir + '/bitcore-stamps.db';
+  } else if (this.node.network === Networks.testnet) {
+    if (this.node.network.regtestEnabled) {
+      this.dataPath = datadir + '/regtest/bitcore-stamps.db';
+    } else {
+      this.dataPath = datadir + '/testnet3/bitcore-stamps.db';
+    }
+  } else {
+    throw new Error('Unknown network: ' + this.network);
+  }
 };
 
-StampingService.prototype.getPublishEvents = function() {
-  return [];
+StampingService.prototype.loadTip = function(callback) {
+  var self = this;
+
+  var options = {
+    keyEncoding: 'binary',
+    valueEncoding: 'binary'
+  };
+
+  self.store.get(StampingService.PREFIX_TIP, options, function(err, tipData) {
+    if(err && err instanceof levelup.errors.NotFoundError) {
+      self.tip = self.genesis;
+      self.tip.__height = 0;
+      self.connectBlock(self.genesis, function(err) {
+        if(err) {
+          return callback(err);
+        }
+
+        self.emit('addblock', self.genesis);
+        callback();
+      });
+      return;
+    } else if(err) {
+      return callback(err);
+    }
+
+    var hash = tipData.toString('hex');
+
+    var times = 0;
+    async.retry({times: 3, interval: self.retryInterval}, function(done) {
+      self.node.getBlock(hash, function(err, tip) {
+        if(err) {
+          times++;
+          self.log.warn('Bitcoind does not have our tip (' + hash + '). Bitcoind may have crashed and needs to catch up.');
+          if(times < 3) {
+            self.log.warn('Retrying in ' + (self.retryInterval / 1000) + ' seconds.');
+          }
+          return done(err);
+        }
+
+        done(null, tip);
+      });
+    }, function(err, tip) {
+      if(err) {
+        self.log.warn('Giving up after 3 tries. Please report this bug to https://github.com/bitpay/bitcore-node/issues');
+        self.log.warn('Please reindex your database.');
+        return callback(err);
+      }
+
+      self.tip = tip;
+      self.node.getBlockHeader(self.tip.hash, function(err, blockHeader) {
+        if (err) {
+          return callback(err);
+        }
+        if(!blockHeader) {
+          return callback(new Error('Could not get height for tip.'));
+        }
+        self.tip.__height = blockHeader.height;
+        callback();
+      });
+
+    });
+  });
+};
+
+/**
+ * Connects a block to the database and add indexes
+ * @param {Block} block - The bitcore block
+ * @param {Function} callback
+ */
+StampingService.prototype.connectBlock = function(block, callback) {
+  this.log.info('adding block', block.hash);
+  this.blockHandler(block, true, callback);
+};
+
+/**
+ * Disconnects a block from the database and removes indexes
+ * @param {Block} block - The bitcore block
+ * @param {Function} callback
+ */
+StampingService.prototype.disconnectBlock = function(block, callback) {
+  this.log.info('disconnecting block', block.hash);
+  this.blockHandler(block, false, callback);
 };
 
 StampingService.prototype.blockHandler = function(block, add, callback) {
   /*
-
-    This blockHandler is called whenever Bitcore node receives a new block from
-    the Bitcoin network.
-
-    Let's override the blockHandler to store transactions that have data
-    embedded within them (these types of transactions may contain file hashes).
-
-    The code below stores any transactions with scriptData into level db, a key-value
-    store that ships with bitcore.
-
+    The code below stores any transactions with scriptData into a level db
+    in a single atomic operation.
   */
+  var self = this;
 
   var operations = [];
+
+  // Update tip
+  var tipHash = add ? new Buffer(block.hash, 'hex') : BufferUtil.reverse(block.header.prevHash);
+  operations.push({
+    type: 'put',
+    key: StampingService.PREFIX_TIP,
+    value: tipHash
+  });
+
   var txs = block.transactions;
   var height = block.__height;
 
@@ -66,18 +195,18 @@ StampingService.prototype.blockHandler = function(block, add, callback) {
       var script = output.script;
 
       if(!script || !script.isDataOut()) {
-        this.node.log.debug('Invalid script');
+        self.log.debug('Invalid script');
         continue;
       }
 
       // If we find outputs with script data, we need to store the transaction into level db
       var scriptData = script.getData().toString('hex');
-      this.node.log.info('scriptData added to in-memory index:', scriptData);
+      self.log.info('scriptData added to index:', scriptData);
 
       // Prepend a prefix to the key to prevent namespacing collisions
       // Append the block height, txid, and outputIndex for ordering purposes (ensures transactions will be returned
       // in the order they occured)
-      var key = [PREFIX, scriptData, height, txid, outputIndex].join('-');
+      var key = [StampingService.PREFIX, scriptData, height, txid, outputIndex].join('-');
       var value = block.hash;
 
       var action = add ? 'put' : 'del';
@@ -90,9 +219,137 @@ StampingService.prototype.blockHandler = function(block, add, callback) {
       operations.push(operation);
     }
   }
-  setImmediate(function() {
-    // store transactions with script data into level db
-    callback(null, operations);
+
+  self.log.debug('Updating the database with operations', operations);
+  self.store.batch(operations, callback);
+
+};
+
+/**
+ * This function will attempt to rewind the chain to the common ancestor
+ * between the current chain and a forked block.
+ * @param {Block} block - The new tip that forks the current chain.
+ * @param {Function} done - A callback function that is called when complete.
+ */
+StampingService.prototype.disconnectTip = function(done) {
+  var self = this;
+
+  var tip = self.tip;
+
+  // TODO: expose prevHash as a string from bitcore
+  var prevHash = BufferUtil.reverse(tip.header.prevHash).toString('hex');
+
+  self.node.getBlock(prevHash, function(err, previousTip) {
+    if (err) {
+      done(err);
+    }
+
+    // Undo the related indexes for this block
+    self.disconnectBlock(tip, function(err) {
+      if (err) {
+        return done(err);
+      }
+
+      // Set the new tip
+      previousTip.__height = self.tip.__height - 1;
+      self.tip = previousTip;
+      self.emit('removeblock', tip);
+      done();
+    });
+  });
+};
+
+/**
+ * This function will synchronize additional indexes for the chain based on
+ * the current active chain in the bitcoin daemon. In the event that there is
+ * a reorganization in the daemon, the chain will rewind to the last common
+ * ancestor and then resume syncing.
+ */
+StampingService.prototype.sync = function() {
+  var self = this;
+
+  if (self.bitcoindSyncing || self.node.stopping || !self.tip) {
+    return;
+  }
+
+  self.bitcoindSyncing = true;
+
+  var height;
+
+  async.whilst(function() {
+    if (self.node.stopping) {
+      return false;
+    }
+    height = self.tip.__height;
+    return height < self.node.services.bitcoind.height;
+  }, function(done) {
+    self.node.getRawBlock(height + 1, function(err, blockBuffer) {
+      if (err) {
+        return done(err);
+      }
+
+      var block = Block.fromBuffer(blockBuffer);
+
+      // TODO: expose prevHash as a string from bitcore
+      var prevHash = BufferUtil.reverse(block.header.prevHash).toString('hex');
+
+      if (prevHash === self.tip.hash) {
+
+        // This block appends to the current chain tip and we can
+        // immediately add it to the chain and create indexes.
+
+        // Populate height
+        block.__height = self.tip.__height + 1;
+
+        // Create indexes
+        self.connectBlock(block, function(err) {
+          if (err) {
+            return done(err);
+          }
+          self.tip = block;
+          self.log.debug('Chain added block to main chain');
+          self.emit('addblock', block);
+          done();
+        });
+      } else {
+        // This block doesn't progress the current tip, so we'll attempt
+        // to rewind the chain to the common ancestor of the block and
+        // then we can resume syncing.
+        self.log.warn('Reorg detected! Current tip: ' + self.tip.hash);
+        self.disconnectTip(function(err) {
+          if(err) {
+            return done(err);
+          }
+          self.log.warn('Disconnected current tip. New tip is ' + self.tip.hash);
+          done();
+        });
+      }
+    });
+  }, function(err) {
+    if (err) {
+      Error.captureStackTrace(err);
+      return self.node.emit('error', err);
+    }
+
+    if(self.node.stopping) {
+      self.bitcoindSyncing = false;
+      return;
+    }
+
+    self.node.isSynced(function(err, synced) {
+      if (err) {
+        Error.captureStackTrace(err);
+        return self.node.emit('error', err);
+      }
+
+      if (synced) {
+        self.bitcoindSyncing = false;
+        self.node.emit('synced');
+      } else {
+        self.bitcoindSyncing = false;
+      }
+    });
+
   });
 
 };
@@ -113,32 +370,33 @@ StampingService.prototype.lookupHash = function(req, res, next) {
     already been included in the blockchain. We are querying data
     from level db that we previously stored into level db via the blockHanlder.
   */
-
+  var self = this;
   enableCors(res);
 
   var hash = req.params.hash; // the hash of the uploaded file
+  this.log.info('request for hash:', hash);
   var node = this.node;
 
   // Search level db for instances of this file hash
   // and put them in objArr
-  var stream = this.node.services.db.store.createReadStream({
-    gte: [PREFIX, hash].join('-'),
-    lt: [PREFIX, hash].join('-') + '~'
+  var stream = self.store.createReadStream({
+    gte: [StampingService.PREFIX, hash].join('-'),
+    lt: [StampingService.PREFIX, hash].join('-') + '~'
   });
 
   var objArr = [];
 
   stream.on('data', function(data) {
-      // Parse data as matches are found and push it
-      // to the objArr
-      data.key = data.key.split('-');
-      var obj = {
-        hash: data.value,
-        height: data.key[2],
-        txid: data.key[3],
-        outputIndex: data.key[4]
-      };
-      objArr.push(obj);
+    // Parse data as matches are found and push it
+    // to the objArr
+    data.key = data.key.split('-');
+    var obj = {
+      hash: data.value,
+      height: data.key[2],
+      txid: data.key[3],
+      outputIndex: data.key[4]
+    };
+    objArr.push(obj);
   });
 
   var error;
@@ -154,7 +412,7 @@ StampingService.prototype.lookupHash = function(req, res, next) {
     if (error) {
       return res.send(500, error.message);
     } else if(!objArr.length) {
-      return res.send(404);
+      return res.sendStatus(404);
     }
 
     // For each transaction that included our file hash, get additional
@@ -163,16 +421,15 @@ StampingService.prototype.lookupHash = function(req, res, next) {
       var txid = obj.txid;
       var includeMempool = true;
 
-      node.services.db.getTransactionWithBlockInfo(txid, includeMempool, function(err, transaction) {
+      node.log.info('getting details for txid:', txid);
+      node.getDetailedTransaction(txid, function(err, transaction) {
         if (err){
           return eachCallback(err);
         }
-
-        var script = transaction.inputs[0].script;
-        var address = script.toAddress(node.network).toString();
+        var address = transaction.inputs[0].address;
 
         obj.sourceAddress = address;
-        obj.timestamp = transaction.__timestamp;
+        obj.timestamp = transaction.blockTimestamp;
         return eachCallback();
       });
     }, function doneGrabbingTransactionData(err) {
@@ -192,40 +449,83 @@ StampingService.prototype.getAddressData = function(req, res, next) {
     This method is called by the client to determine whether a BTC address
     has recieved funds yet
   */
+  var self = this;
   enableCors(res);
-  var addressService = this.node.services.address;
   var address = req.params.address;
-  addressService.getUnspentOutputs(address, true, function(err, unspentOutputs) {
+  this.node.getAddressUnspentOutputs(address, {}, function(err, unspentOutputs) {
     if (err){
-      return console.log('err', err);
+      return self.log('err', err);
     }
-
+    self.log.info('Address data (' + address + '):', unspentOutputs);
     res.send(unspentOutputs);
   });
 };
 
 StampingService.prototype.sendTransaction = function(req, res, next){
   enableCors(res);
+  var self = this;
   var serializedTransaction = req.params.transaction;
 
-  try {
-    this.node.services.bitcoind.sendTransaction(serializedTransaction);
-  } catch(err) {
+  this.node.sendTransaction(serializedTransaction, function(err) {
     if (err){
-      console.log('error sending transaction', err);
+      self.log('error sending transaction', err);
       return res.send(500, err);
     }
-  }
-
-  res.send(200);
+    res.sendStatus(200);
+  });
 };
 
 StampingService.prototype.start = function(callback) {
-  setImmediate(callback);
+
+  var self = this;
+  if (!fs.existsSync(this.dataPath)) {
+    mkdirp.sync(this.dataPath);
+  }
+
+  this.genesis = Block.fromBuffer(this.node.services.bitcoind.genesisBuffer);
+  this.store = levelup(this.dataPath, { db: this.levelupStore });
+
+  this.once('ready', function() {
+    self.log.info('Bitcoin Database Ready');
+
+    self.node.services.bitcoind.on('tip', function() {
+      if(!self.node.stopping) {
+        self.sync();
+      }
+    });
+  });
+
+  self.loadTip(function(err) {
+    if (err) {
+      return callback(err);
+    }
+
+    self.sync();
+    self.emit('ready');
+    callback();
+  });
+
 };
 
 StampingService.prototype.stop = function(callback) {
-  setImmediate(callback);
+  var self = this;
+
+  // Wait until syncing stops and all db operations are completed before closing leveldb
+  async.whilst(function() {
+    return self.bitcoindSyncing;
+  }, function(next) {
+    setTimeout(next, 10);
+  }, function() {
+    self.store.close(callback);
+  });
+};
+
+StampingService.prototype.getAPIMethods = function() {
+  return [];
+};
+
+StampingService.prototype.getPublishEvents = function() {
+  return [];
 };
 
 module.exports = StampingService;
