@@ -4,7 +4,6 @@
   "description": "A Bitcore tutorial illustrating how to timestamp files in the blockchain",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
     "bower-install": "bower install",
     "gulp-watch": "gulp watch",
     "gulp-build": "gulp build"

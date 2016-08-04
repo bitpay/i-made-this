@@ -65,8 +65,8 @@ npm install electron-prebuilt -g
 
 cd i-made-this
 npm install
-bower install
-electron .
+npm run bower-install
+npm run gulp-watch
 ```
 
 To learn how to create this project from scratch, [read the tutorial](https://bitcore.io/guides/i-made-this).
