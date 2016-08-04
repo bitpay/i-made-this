@@ -10,8 +10,7 @@ angular
     });
 
 function AppController($scope, $window, $log, $http, $interval, BitcoreService, FileService, SERVICE) {
-    var pollInterval,   // $interval promise that needs to be canceled if user exits stamping mode
-        privateKey;     // the private key of the generated address
+    var pollInterval;   // $interval promise that needs to be canceled if user exits stamping mode
 
     var vm = $scope;
 
@@ -75,8 +74,8 @@ function AppController($scope, $window, $log, $http, $interval, BitcoreService, 
     // Generates a BTC address to be displayed by the qrcode so
     // that the user can send the app enough BTC for timestamping
     function stampFile() {
-        privateKey = new BitcoreService.PrivateKey();
-        var publicKey = new BitcoreService.PublicKey(privateKey);
+        var privateKey = new BitcoreService.PrivateKey(),
+            publicKey = new BitcoreService.PublicKey(privateKey);
 
         vm.stamping = true;
         vm.address = new BitcoreService.Address(publicKey, BitcoreService.Networks.testnet).toString();
@@ -130,10 +129,9 @@ function BitcoreService() {
 }
 
 function FileService($http, $q, $log, BitcoreService, Upload, SERVICE) {
-    // fileHash represents the most recently hashed file.
-    var fileHash = undefined,
-        pendingTimestamps = {};
-
+    var fileHash = undefined,   // fileHash represents the most recently hashed file.
+        pendingTimestamps = {}; // pendingTimestamps are the timestamps of transactions
+                                // that are currently pending on the blockchain.
     return {
         stamp: stamp,
         hash: hash,
