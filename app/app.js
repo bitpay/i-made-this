@@ -11,7 +11,6 @@ angular
 
 function AppController($scope, $window, $log, $http, $interval, BitcoreService, FileService, SERVICE) {
     var pendingFileHashes = {},
-        fileHash,       // a hash of the uploaded file
         pollInterval,   // $interval promise that needs to be canceled if user exits stamping mode
         privateKey;     // the private key of the generated address
 
@@ -45,25 +44,20 @@ function AppController($scope, $window, $log, $http, $interval, BitcoreService, 
             vm.fileType = typeToks[0];
             vm.fileExtension = ext;
 
-            FileService.hash(file, function(fileHashString) {
-                fileHash = fileHashString;
-                $log.info('fileHash', fileHash);
-                FileService.inBlockchain(fileHash)
-                    .success(function(data, statusCode) {
-                        vm.previousTimestamps = data;
-                        vm.previousTimestamps = vm.previousTimestamps.map(function(ts) {
-                            ts.date = new Date(ts.timestamp*1000);
-                            return ts;
-                        });
-                    })
-                    .error(function(data, statusCode) {
-                        if (statusCode === 404) {
-                            if (pendingFileHashes[fileHash]) {
-                                vm.pendingTimestamp = pendingFileHashes[fileHash];
-                            }
-                        }
+            FileService.hash(file)
+                .then(FileService.inBlockchain)
+                .then(function(timestamps) {
+                    vm.previousTimestamps = timestamps;
+                    vm.previousTimestamps = vm.previousTimestamps.map(function(ts) {
+                        ts.date = new Date(ts.timestamp*1000);
+                        return ts;
                     });
-            });
+                })
+                .catch(function(err) {
+                    if (err.status === 404 && pendingFileHashes[err.fileHash]) {
+                        vm.pendingTimestamp = pendingFileHashes[err.fileHash];
+                    }
+                });
         }
     });
 
@@ -92,7 +86,7 @@ function AppController($scope, $window, $log, $http, $interval, BitcoreService, 
         vm.address = new BitcoreService.Address(publicKey, BitcoreService.Networks.testnet).toString();
 
         monitorAddress(vm.address, function(unspentOutputs) {
-            FileService.stamp(unspentOutputs, privateKey, fileHash)
+            FileService.stamp(unspentOutputs, privateKey)
                 .then(function(transactionId) {
                     vm.stampSuccess = true;
                     pendingFileHashes[fileHash] = {date: new Date()};
@@ -106,18 +100,15 @@ function AppController($scope, $window, $log, $http, $interval, BitcoreService, 
 
     // Asks bitcore-node whether the input BTC address has received funds from the user
     function monitorAddress(address, cb) {
-        function gotAddressInfo(data, statusCode) {
-            if(data.length) {
-                var unspentOutput = data[0];
-                $interval.cancel(pollInterval);
-                cb(unspentOutput);
-            }
-        }
-
         pollInterval = $interval(function() {
-            $log.info('monitorAddress interval called for address:', address);
             $http.get(SERVICE.BASE_PATH + '/address/' + address)
-                .success(gotAddressInfo);
+                .then(function(http) {
+                    if (http.data.length) {
+                        var unspentOutput = http.data[0];
+                        $interval.cancel(pollInterval);
+                        cb(unspentOutput);
+                    }
+                });
         }, 1000);
     }
 
@@ -142,7 +133,10 @@ function BitcoreService() {
     return require('bitcore-lib');
 }
 
-function FileService($http, $q, BitcoreService, Upload, SERVICE) {
+function FileService($http, $q, $log, BitcoreService, Upload, SERVICE) {
+    // fileHash represents the most recently hashed file.
+    var fileHash = undefined;
+
     return {
         stamp: stamp,
         hash: hash,
@@ -151,7 +145,7 @@ function FileService($http, $q, BitcoreService, Upload, SERVICE) {
 
     // Uses the BTC received from the user to create a new transaction object
     // that includes the hash of the uploaded file
-    function stamp(unspentOutput, privateKey, fileHash) {
+    function stamp(unspentOutput, privateKey) {
         var Transaction = BitcoreService.Transaction,
             unspent2 = BitcoreService.Transaction.UnspentOutput(unspentOutput);
 
@@ -180,18 +174,26 @@ function FileService($http, $q, BitcoreService, Upload, SERVICE) {
             });
     }
 
-    function hash(file, cb) {
-        Upload.base64DataUrl(file).then(function(urls) {
-            var Buffer = BitcoreService.deps.Buffer,
-                data = new Buffer(urls, 'base64'),
-                hash = BitcoreService.crypto.Hash.sha256sha256(data),
-                hashString = hash.toString('hex');
-            return cb(hashString);
-        });
+    function hash(file) {
+        return Upload.base64DataUrl(file)
+            .then(function(urls) {
+                var Buffer = BitcoreService.deps.Buffer,
+                    data = new Buffer(urls, 'base64');
+                fileHash = BitcoreService.crypto.Hash.sha256sha256(data).toString('hex');
+                return fileHash
+            });
     }
 
     // Asks bitcore-node if the hash of the uploaded file has been timestamped in the bockchain before
-    function inBlockchain(fileHashString) {
-        return $http.get(SERVICE.BASE_PATH + '/hash/' + fileHashString);
+    function inBlockchain(fileHash) {
+        return $http.get(SERVICE.BASE_PATH + '/hash/' + fileHash)
+            .then(function(http) {
+                $log.info(http);
+                return http.data;
+            })
+            .catch(function(http) {
+                $log.info(http);
+                return $q.reject({status: http.status, fileHash: fileHash});
+            });
     }
 }
