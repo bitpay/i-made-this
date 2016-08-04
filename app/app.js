@@ -1,13 +1,13 @@
 'use strict';
+
+
 var bitcore;
 angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
 
-.run( function run () {
-  bitcore = require('bitcore-lib');
+.run(function() {
+    bitcore = require('bitcore-lib');
 })
-
-.controller('MyCtrl', ['$scope', 'Upload', '$http', '$interval',
- function ($scope, Upload, $http, $interval) {
+.controller('MyCtrl', function ($scope, Upload, $http, $interval) {
 
     var bitcoreServiceBasePath = 'http://localhost:3001/stampingservice';
     var pendingFileHashes = {};
@@ -171,4 +171,4 @@ angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
       e.preventDefault();
     },false);
 
-}]);
+});

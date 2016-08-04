@@ -1,6 +1,7 @@
 'use strict';
 var app = require('app');  // Module to control application life.
 var BrowserWindow = require('browser-window');  // Module to create native browser window.
+var connect = require('electron-connect').client;
 
 // Report crashes to our server.
 require('crash-reporter').start();
@@ -25,10 +26,10 @@ app.on('ready', function() {
   mainWindow = new BrowserWindow({width: 725, height: 680, resizable: false});
 
   // and load the index.html of the app.
-  mainWindow.loadUrl('file://' + __dirname + '/index.html');
+  mainWindow.loadUrl('file://' + __dirname + '/build/index.html');
 
   // Open the DevTools.
-  //mainWindow.openDevTools();
+  mainWindow.openDevTools();
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function() {
@@ -37,4 +38,6 @@ app.on('ready', function() {
     // when you should delete the corresponding element.
     mainWindow = null;
   });
+
+  connect.create(mainWindow);
 });

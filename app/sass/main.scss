@@ -1,6 +1,6 @@
 @font-face {
   font-family: Titillium;
-  src: url(../TitilliumText400wt.otf);
+  src: url(fonts/TitilliumText400wt.otf);
   font-weight: normal;
  }
 body {
@@ -64,7 +64,7 @@ button {
   top: 10px;
   left: 30px;
   display: block;
-  background: url(../img/close.svg);
+  background: url(img/close.svg);
   background-repeat: no-repeat;
   background-size: 15px
  }
@@ -102,7 +102,7 @@ h1 {
   display: block;
   /*border-radius: 10px;*/
   background-color: #1e5799;
-  background: url(../img/bg.png) center no-repeat; }
+  background: url(img/bg.png) center no-repeat; }
   .container.success {
     background: #09C286; }
 
@@ -141,7 +141,7 @@ h1 {
   width: 100%;
   display: block;
   height: 350px;
-  background: #3C2668 url(../img/file.svg) center no-repeat;
+  background: #3C2668 url(img/file.svg) center no-repeat;
   background-size: 50%;
   padding-top: 32%;
   font-size: 2.4em; }
@@ -182,7 +182,7 @@ h1 {
   width: 400px;
   padding: 140px 0;
   border: 2px dashed rgba(255, 255, 255, 0.4);
-  background: url(../img/upload.svg) no-repeat center;
+  background: url(img/upload.svg) no-repeat center;
   background-size: 50%;
   border-radius: 5px;
   margin: 10% auto 2%; }
