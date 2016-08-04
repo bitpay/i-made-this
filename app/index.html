@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="no-js" lang="en" ng-app="iMadeThis">
+<html lang="en" ng-app="iMadeThis">
 <head>
 
   <!-- Basic Page Needs
@@ -30,7 +30,7 @@
     <br>
 
     <!-- Initial -->
-    <div class="screen initial" ng-hide="files[0]">
+    <div class="initial" ng-hide="files[0]">
 	<h1>What did you make today?</h1>
 	<p>Drop your file here to upload</p>
 	<div ngf-drop ngf-select ng-model="files" class="dropbox" ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true"></div>
@@ -38,7 +38,7 @@
     </div>
 
     <!-- Preview -->
-    <div class="overlay" ng-show="files[0]">
+    <div ng-show="files[0]">
       <a href="#" class="close" ng-click="cancel()"></a>
       <div ng-show="files[0] && !stamping">
         <div class="preview clear-top shadow" ng-class="{'error': previousTimestamps[0] || pendingTimestamp}">
