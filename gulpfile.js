@@ -73,12 +73,16 @@ gulp.task("js:watch", ["js:build"], function() {
 // main tasks
 gulp.task("build", ["index:build", "js:build", "sass:build", "img:build", "fonts:build"]);
 
-gulp.task("watch", ["build"], function() {
+gulp.task("serve", ["build"], function() {
     connect.start();
+});
 
+gulp.task("watch", ["serve"], function() {
     gulp.watch("./app/index.html", {interval: 500}, ["index:watch"]);
     gulp.watch("./app/**/*.scss", {interval: 500}, ["sass:watch"]);
     gulp.watch("./app/**/*.js", {interval: 500}, ["js:watch"]);
 });
 
-gulp.task("default", ["watch"]);
+
+// default task
+gulp.task("default", ["serve"]);
