@@ -10,8 +10,7 @@ angular
     });
 
 function AppController($scope, $window, $log, $http, $interval, BitcoreService, FileService, SERVICE) {
-    var pendingFileHashes = {},
-        pollInterval,   // $interval promise that needs to be canceled if user exits stamping mode
+    var pollInterval,   // $interval promise that needs to be canceled if user exits stamping mode
         privateKey;     // the private key of the generated address
 
     var vm = $scope;
@@ -47,16 +46,13 @@ function AppController($scope, $window, $log, $http, $interval, BitcoreService, 
             FileService.hash(file)
                 .then(FileService.inBlockchain)
                 .then(function(timestamps) {
-                    vm.previousTimestamps = timestamps;
-                    vm.previousTimestamps = vm.previousTimestamps.map(function(ts) {
+                    vm.previousTimestamps = timestamps.map(function(ts) {
                         ts.date = new Date(ts.timestamp*1000);
                         return ts;
                     });
                 })
                 .catch(function(err) {
-                    if (err.status === 404 && pendingFileHashes[err.fileHash]) {
-                        vm.pendingTimestamp = pendingFileHashes[err.fileHash];
-                    }
+                    vm.pendingTimestamp = err.pendingTimestamp ? err.pendingTimestamp : undefined;
                 });
         }
     });
@@ -85,11 +81,11 @@ function AppController($scope, $window, $log, $http, $interval, BitcoreService, 
         vm.stamping = true;
         vm.address = new BitcoreService.Address(publicKey, BitcoreService.Networks.testnet).toString();
 
+        // Wait for the BTC to be received, then stamp the file.
         monitorAddress(vm.address, function(unspentOutputs) {
             FileService.stamp(unspentOutputs, privateKey)
                 .then(function(transactionId) {
                     vm.stampSuccess = true;
-                    pendingFileHashes[fileHash] = {date: new Date()};
                     vm.transactionId = transactionId;
                 })
                 .catch(function(transactionId) {
@@ -135,7 +131,8 @@ function BitcoreService() {
 
 function FileService($http, $q, $log, BitcoreService, Upload, SERVICE) {
     // fileHash represents the most recently hashed file.
-    var fileHash = undefined;
+    var fileHash = undefined,
+        pendingTimestamps = {};
 
     return {
         stamp: stamp,
@@ -167,6 +164,7 @@ function FileService($http, $q, $log, BitcoreService, Upload, SERVICE) {
         transaction2.sign(privateKey);
         return $http.get(SERVICE.BASE_PATH + '/send/' + transaction2.uncheckedSerialize())
             .then(function() {
+                pendingTimestamps[fileHash] = {date: new Date()};
                 return transaction2.id;
             })
             .catch(function() {
@@ -188,12 +186,13 @@ function FileService($http, $q, $log, BitcoreService, Upload, SERVICE) {
     function inBlockchain(fileHash) {
         return $http.get(SERVICE.BASE_PATH + '/hash/' + fileHash)
             .then(function(http) {
-                $log.info(http);
                 return http.data;
             })
             .catch(function(http) {
-                $log.info(http);
-                return $q.reject({status: http.status, fileHash: fileHash});
+                if (http.status == 404 && pendingTimestamps[fileHash]) {
+                    return $q.reject({pendingTimestamp: pendingTimestamps[fileHash]});
+                }
+                return $q.reject({});
             });
     }
 }
