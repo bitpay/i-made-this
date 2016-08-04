@@ -6,7 +6,7 @@ var gulp = require("gulp"),
     concat = require("gulp-concat"),
     watch = require("gulp-watch"),
     annotate = require("gulp-ng-annotate"),
-    jslint = require("gulp-jslint"),
+    eslint = require("gulp-eslint"),
     ignore = require("gulp-ignore"),
     plumber = require("gulp-plumber"),
     bowerFiles = require("main-bower-files"),
@@ -59,7 +59,8 @@ gulp.task("sass:watch", ["sass:build"], function() {
 gulp.task("js:build", function() {
     gulp.src("./app/**/*.js")
         .pipe(plumber())
-        .pipe(jslint())
+        .pipe(eslint())
+        .pipe(eslint.format())
         .pipe(concat("app.js"))
         .pipe(annotate())
         .pipe(gulp.dest("./build/"));
