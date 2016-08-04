@@ -12,7 +12,8 @@ var gulp = require("gulp"),
     bowerFiles = require("main-bower-files"),
     connect = require('electron-connect').server.create();
 
-gulp.task("inject", function() {
+// index
+gulp.task("index:build", function() {
     gulp.src("./app/index.html")
         .pipe(plumber())
         .pipe(inject(gulp.src(bowerFiles(), {"base": "./build/bower_components", "read": false}),
@@ -20,20 +21,42 @@ gulp.task("inject", function() {
         .pipe(gulp.dest("./build/"));
 });
 
-gulp.task("fonts", function() {
+gulp.task("index:watch", ["index:build"], function() {
+    connect.reload();
+});
+
+
+// fonts
+gulp.task("fonts:build", function() {
     gulp.src("./app/fonts/*")
         .pipe(plumber())
         .pipe(gulp.dest("./build/fonts"));
 });
 
-gulp.task("sass", function() {
+
+// img
+gulp.task("img:build", function() {
+    gulp.src("./app/img/*")
+        .pipe(plumber())
+        .pipe(gulp.dest("./build/img/"));
+});
+
+
+// sass
+gulp.task("sass:build", function() {
     gulp.src("./app/sass/main.scss")
         .pipe(plumber())
         .pipe(sass())
         .pipe(gulp.dest("./build/"));
 });
 
-gulp.task("js", function() {
+gulp.task("sass:watch", ["sass:build"], function() {
+    connect.reload();
+});
+
+
+// js
+gulp.task("js:build", function() {
     gulp.src("./app/**/*.js")
         .pipe(plumber())
         .pipe(jslint())
@@ -42,30 +65,20 @@ gulp.task("js", function() {
         .pipe(gulp.dest("./build/"));
 });
 
-gulp.task("img", function() {
-    gulp.src("./app/img/*")
-        .pipe(plumber())
-        .pipe(gulp.dest("./build/img/"));
-});
-
-gulp.task('connect:restart', function() {
-    // app.js
+gulp.task("js:watch", ["js:build"], function() {
     connect.restart();
 });
 
-gulp.task('connect:reload', function() {
-    // index.html
-    connect.reload();
-});
 
-gulp.task("build", ["inject", "fonts", "js", "sass", "img"]);
+// main tasks
+gulp.task("build", ["index:build", "js:build", "sass:build", "img:build", "fonts:build"]);
 
 gulp.task("watch", ["build"], function() {
     connect.start();
 
-    gulp.watch("./app/index.html", {interval: 500}, ["inject"]);
-    gulp.watch("./app/**/*.scss", {interval: 500}, ["sass"]);
-    gulp.watch("./app/**/*.js", {interval: 500}, ["js"]);
+    gulp.watch("./app/index.html", {interval: 500}, ["index:watch"]);
+    gulp.watch("./app/**/*.scss", {interval: 500}, ["sass:watch"]);
+    gulp.watch("./app/**/*.js", {interval: 500}, ["js:watch"]);
 });
 
 gulp.task("default", ["watch"]);

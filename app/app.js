@@ -1,6 +1,5 @@
 'use strict';
 
-
 var bitcore;
 angular.module('iMadeThis', ['ngFileUpload', 'monospaced.qrcode'])
 
