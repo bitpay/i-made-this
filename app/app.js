@@ -6,17 +6,20 @@ angular
     .factory('FileService', FileService)
     .controller('AppController', AppController)
     .constant('SERVICE', {
-        BASE_PATH: 'http://localhost:3001/stampingservice'
+        LOCAL_NODE_BASE_PATH: 'http://localhost:3001/stampingservice',
+        EXTERNAL_INSIGHT_BASE_PATH: 'https://test-insight.bitpay.com/tx/'
     });
 
-function AppController($scope, $window, $log, $http, $interval, BitcoreService, FileService, SERVICE) {
+function AppController($scope, $window, $http, $interval, BitcoreService, FileService, SERVICE) {
     var pollInterval;   // $interval promise that needs to be canceled if user exits stamping mode
 
     var vm = $scope;
 
     // view model variables
-    vm.previousHash = undefined; // was this file previously stamped?
-    vm.pendingHash = undefined;  // is this file's stamp being processed?
+    vm.previousHash = undefined; // If the file has been hashed before, then store it here.
+                                 // This is an object with a hashVal, timestamp, date, etc..
+    vm.pendingHash = undefined;  // If the file's hash is pending, then store it here.
+                                 // This is an object with a hashVal, timestamp, date, etc..
     vm.files = undefined;
     vm.fileType = undefined;
     vm.fileExtension = undefined;
@@ -31,7 +34,9 @@ function AppController($scope, $window, $log, $http, $interval, BitcoreService, 
     vm.cancelStamp = cancelStamp;
     vm.openTransactionInBrowser = openTransactionInBrowser;
 
-    // Wait for the user to upload a file
+    // Watch for a new file. When a new file is added, it will be hashed
+    // and the block chain will be checked for this hash to determine
+    // if there are previous or pending hashes.
     $scope.$watch('files', function() {
         if (vm.files && vm.files[0]) {
             var file = vm.files[0],
@@ -50,12 +55,12 @@ function AppController($scope, $window, $log, $http, $interval, BitcoreService, 
                     vm.pendingHash = hashes.pending;
                 })
                 .catch(function(pending) {
-                    vm.pendingHash = hashes.pending;
+                    vm.pendingHash = pending;
                 });
         }
     });
 
-    // Returns app to zero-state
+    // cancel re-initializes the app.
     function cancel() {
         delete vm.files;
         vm.stampSuccess = false;
@@ -64,14 +69,15 @@ function AppController($scope, $window, $log, $http, $interval, BitcoreService, 
         vm.cancelStamp();
     }
 
-    // Exits stamping mode for the current file
+    // cancelStomp exits stamping mode for the current file.
     function cancelStamp() {
         vm.stamping = false;
         $interval.cancel(pollInterval);
     }
 
-    // Generates a BTC address to be displayed by the qrcode so
-    // that the user can send the app enough BTC for timestamping
+    // stampFile generates a BTC address, so the user can send the app BTC for timestamping.
+    // Once the app has received the BTC, it will use the FileService.stamp function and the
+    // generated private key to send a seperate transaction with the file hash.
     function stampFile() {
         var privateKey = new BitcoreService.PrivateKey(),
             publicKey = new BitcoreService.PublicKey(privateKey);
@@ -95,7 +101,7 @@ function AppController($scope, $window, $log, $http, $interval, BitcoreService, 
     // Asks bitcore-node whether the input BTC address has received funds from the user
     function monitorAddress(address, cb) {
         pollInterval = $interval(function() {
-            $http.get(SERVICE.BASE_PATH + '/address/' + address)
+            $http.get(SERVICE.LOCAL_NODE_BASE_PATH + '/address/' + address)
                 .then(function(http) {
                     if (http.data.length) {
                         var unspentOutput = http.data[0];
@@ -107,12 +113,12 @@ function AppController($scope, $window, $log, $http, $interval, BitcoreService, 
     }
 
     function openTransactionInBrowser(transactionId) {
-        require('shell').openExternal('https://test-insight.bitpay.com/tx/' + transactionId);
+        require('shell').openExternal(SERVICE.EXTERNAL_INSIGHT_BASE_PATH + transactionId);
     }
 
-    // Prevent files that are dragged into the electron browser window
-    // from being loaded into the browser if we are not in the preliminary
-    // upload state
+    // These window events prevent files that are dragged into
+    // the electron browserwindow from being loaded into the
+    // browser if we are not in the preliminary upload state.
     $window.addEventListener("dragover",function(e) {
         e = e || event;
         e.preventDefault();
@@ -123,72 +129,79 @@ function AppController($scope, $window, $log, $http, $interval, BitcoreService, 
     },false);
 }
 
+// BitcoreService wraps the bitcore-lib for DI purposes.
 function BitcoreService() {
     return require('bitcore-lib');
 }
 
-function FileService($http, $q, $log, BitcoreService, Upload, SERVICE) {
-    var fileHash = undefined,    // fileHash represents the most recently hashed file.
-        pendingHashes = {};      // pendingHashes are the timestamps of transactions
-                                 // that are currently pending on the blockchain.
+// FileService provides an interface into stamping files onto the testnet blockchain.
+function FileService($http, $q, BitcoreService, Upload, SERVICE) {
+    var hashVal = undefined,    // hashVal represents the hash of the most recently hashed file.
+        pendingHashes = {};     // pendingHashes are the hashes of transactions
+                                // that are currently pending on the blockchain.
+                                // This is a group of date values keyed by hashVal.
     return {
         stamp: stamp,
         hash: hash,
         inBlockchain: inBlockchain
     };
 
-    // Uses the BTC received from the user to create a new transaction object
-    // that includes the hash of the uploaded file
-    function stamp(unspentOutput, privateKey) {
-        var Transaction = BitcoreService.Transaction,
-            unspent2 = BitcoreService.Transaction.UnspentOutput(unspentOutput);
+    // stamp uses the BTC received from the user to create a new transaction object
+    // that includes the hash of the uploaded file.
+    function stamp(unspent, privateKey) {
+        unspent = BitcoreService.Transaction.UnspentOutput(unspent);
 
-        // Let's create a transaction that sends all recieved BTC to a miner
-        // (no coins will go to a change address)
-        var transaction2 = Transaction();
-        transaction2
-            .from(unspent2)
+        // Create a transaction that sends all recieved BTC to a miner.
+        var transaction = BitcoreService.Transaction();
+        transaction
+            .from(unspent)
             .fee(50000);
 
-        // Append the hash of the file to the transaction
-        transaction2.addOutput(new Transaction.Output({
-            script: BitcoreService.Script.buildDataOut(fileHash, 'hex'),
+        // Append the hash of the file to the transaction.
+        transaction.addOutput(new BitcoreService.Transaction.Output({
+            script: BitcoreService.Script.buildDataOut(hashVal, 'hex'),
             satoshis: 0
         }));
 
         // Sign transaction with the original private key that generated
-        // the address to which the user sent BTC
-        transaction2.sign(privateKey);
-        return $http.get(SERVICE.BASE_PATH + '/send/' + transaction2.uncheckedSerialize())
+        // the address to which the user sent BTC.
+        transaction.sign(privateKey);
+
+        // Send the transaction and add the hash as a pending hash.
+        return $http.get(SERVICE.LOCAL_NODE_BASE_PATH + '/send/' + transaction.uncheckedSerialize())
             .then(function() {
-                pendingHashes[fileHash] = {date: new Date()};
-                return transaction2.id;
+                pendingHashes[hashVal] = {date: new Date()};
+                return transaction.id;
             })
             .catch(function() {
-                return $q.reject(transaction2.id);
+                return $q.reject(transaction.id);
             });
     }
 
+    // hash performs a SHA256 hash on the incoming file and stores the hash
+    // in the service level hash variable.
     function hash(file) {
         return Upload.base64DataUrl(file)
             .then(function(urls) {
-                var Buffer = BitcoreService.deps.Buffer,
-                    data = new Buffer(urls, 'base64');
-                fileHash = BitcoreService.crypto.Hash.sha256sha256(data).toString('hex');
-                return fileHash
+                var data = new BitcoreService.deps.Buffer(urls, 'base64');
+                hashVal = BitcoreService.crypto.Hash.sha256sha256(data).toString('hex');
+                return hashVal
             });
     }
 
     // inBlockchain determines if the given hash has been previously in the blockchain
     // or if its processing is still pending in the blockchain.
-    function inBlockchain(fileHash) {
-        return $http.get(SERVICE.BASE_PATH + '/hash/' + fileHash)
+    function inBlockchain(hashVal) {
+        return $http.get(SERVICE.LOCAL_NODE_BASE_PATH + '/hash/' + hashVal)
             .then(function(http) {
-                return $q.when({previous: http.data[0], pending: pendingHashes[fileHash] ? pendingHashes[fileHash] : undefined});
+                // TODO: Currently, pending hashes will stay around until the app is
+                // restarted. This list of blockchain hashes should be search through
+                // to determine if any pending hashes have been completed.
+                return $q.when({previous: http.data[0], pending: pendingHashes[hashVal] ? pendingHashes[hashVal] : undefined});
             })
             .catch(function(http) {
-                if (http.status == 404 && pendingHashes[fileHash]) {
-                    return $q.reject(pendingHashes[fileHash]);
+                if (http.status == 404 && pendingHashes[hashVal]) {
+                    return $q.reject(pendingHashes[hashVal]);
                 }
                 return $q.reject(undefined);
             });
