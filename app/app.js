@@ -2,17 +2,16 @@
 
 angular
     .module('app', ['ngFileUpload', 'monospaced.qrcode'])
-    .factory('BitcoreService', BitcoreService)
-    .factory('FileService', FileService)
     .controller('AppController', AppController)
+    .factory('BitcoreService', BitcoreService)
+    .factory('AddressMonitoringService', AddressMonitoringService)
+    .factory('FileService', FileService)
     .constant('SERVICE', {
         LOCAL_NODE_BASE_PATH: 'http://localhost:3001/stampingservice',
         EXTERNAL_INSIGHT_BASE_PATH: 'https://test-insight.bitpay.com/tx/'
     });
 
-function AppController($scope, $window, $http, $interval, BitcoreService, FileService, SERVICE) {
-    var pollInterval;   // $interval promise that needs to be canceled if user exits stamping mode
-
+function AppController($scope, $window, BitcoreService, FileService, AddressMonitoringService, SERVICE) {
     var vm = $scope;
 
     // view model variables
@@ -72,7 +71,7 @@ function AppController($scope, $window, $http, $interval, BitcoreService, FileSe
     // cancelStomp exits stamping mode for the current file.
     function cancelStamp() {
         vm.stamping = false;
-        $interval.cancel(pollInterval);
+        AddressMonitoringService.cancel();
     }
 
     // stampFile generates a BTC address, so the user can send the app BTC for timestamping.
@@ -86,30 +85,17 @@ function AppController($scope, $window, $http, $interval, BitcoreService, FileSe
         vm.address = new BitcoreService.Address(publicKey, BitcoreService.Networks.testnet).toString();
 
         // Wait for the BTC to be received, then stamp the file.
-        monitorAddress(vm.address, function(unspentOutputs) {
-            FileService.stamp(unspentOutputs, privateKey)
-                .then(function(transactionId) {
-                    vm.stampSuccess = true;
-                    vm.transactionId = transactionId;
-                })
-                .catch(function(transactionId) {
-                    vm.transactionId = transactionId;
-                });
-        });
-    }
-
-    // Asks bitcore-node whether the input BTC address has received funds from the user
-    function monitorAddress(address, cb) {
-        pollInterval = $interval(function() {
-            $http.get(SERVICE.LOCAL_NODE_BASE_PATH + '/address/' + address)
-                .then(function(http) {
-                    if (http.data.length) {
-                        var unspentOutput = http.data[0];
-                        $interval.cancel(pollInterval);
-                        cb(unspentOutput);
-                    }
-                });
-        }, 1000);
+        AddressMonitoringService.start(vm.address)
+            .then(function(unspentOutputs) {
+                FileService.stamp(unspentOutputs, privateKey)
+                    .then(function(transactionId) {
+                        vm.stampSuccess = true;
+                        vm.transactionId = transactionId;
+                    })
+                    .catch(function(transactionId) {
+                        vm.transactionId = transactionId;
+                    });
+            });
     }
 
     function openTransactionInBrowser(transactionId) {
@@ -132,6 +118,38 @@ function AppController($scope, $window, $http, $interval, BitcoreService, FileSe
 // BitcoreService wraps the bitcore-lib for DI purposes.
 function BitcoreService() {
     return require('bitcore-lib');
+}
+
+// AddressMonitoringService provides an interface into determining
+// when an address has received a transaction.
+function AddressMonitoringService($http, $interval, $q, SERVICE) {
+    var interval = undefined;
+
+    return {
+        start: start,
+        cancel: cancel
+    };
+
+    // start polls the local bitcore node to determine if a
+    // given address has received a transaction.
+    function start(address) {
+        var deferred = $q.defer();
+        interval = $interval(function() {
+            $http.get(SERVICE.LOCAL_NODE_BASE_PATH + '/address/' + address)
+                .then(function(http) {
+                    if (http.data.length) {
+                        deferred.resolve(http.data[0]);
+                        $interval.cancel(interval);
+                    }
+                });
+        }, 1000);
+        return deferred.promise;
+    }
+
+    // cancel stops the bitcore node polling.
+    function cancel() {
+        $interval.cancel(interval);
+    }
 }
 
 // FileService provides an interface into stamping files onto the testnet blockchain.
