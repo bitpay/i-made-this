@@ -39,3 +39,4 @@ rules:
   no-param-reassign: 0
   id-length: 0
   max-lines: 1
+  sort-vars: 0

@@ -6,16 +6,15 @@ let EventEmitter = require('events').EventEmitter,
     fs = require('fs'),
     leveldown = require('leveldown'),
     levelup = require('levelup'),
-    mkdirp = require('mkdirp'),
-    util = require('util');
+    mkdirp = require('mkdirp');
 
 let $ = bitcore.util.preconditions,
     Block = bitcore.Block,
     BufferUtil = bitcore.util.buffer,
     Networks = bitcore.Networks;
 
-const PREFIX_TIP = new Buffer('04', 'hex'),
-      PREFIX = String.fromCharCode(0xff);
+let PREFIX_TIP = new Buffer('04', 'hex'),
+    PREFIX = String.fromCharCode(0xff);
 
 class StampingService extends EventEmitter {
     constructor(options) {
@@ -47,6 +46,7 @@ class StampingService extends EventEmitter {
     setDataPath() {
         $.checkState(this.node.services.bitcoind.spawn.datadir, 'bitcoind is expected to have a "spawn.datadir" property');
         let datadir = this.node.services.bitcoind.spawn.datadir;
+
         if (this.node.network !== Networks.testnet) {
             throw new Error('Unknown network: ' + this.network);
         }
