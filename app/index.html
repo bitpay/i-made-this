@@ -31,10 +31,10 @@
 
     <!-- Initial -->
     <div class="initial" ng-hide="files[0]">
-	<h1>What did you make today?</h1>
-	<p>Drop your file here to upload</p>
-	<div ngf-drop ngf-select ng-model="files" class="dropbox" ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true"></div>
-	<button ngf-select ng-model="files" class="btn transparent" ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true">Upload file</button>
+      <h1>What did you make today?</h1>
+      <p>Drop your file here to upload</p>
+      <div ngf-drop ngf-select ng-model="files" class="dropbox" ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true"></div>
+      <button ngf-select ng-model="files" class="btn transparent" ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true">Upload file</button>
     </div>
 
     <!-- Preview -->
@@ -42,9 +42,9 @@
       <a href="#" class="close" ng-click="cancel()"></a>
       <div ng-show="files[0] && !stamping">
         <div class="preview clear-top shadow" ng-class="{'error': previousHash || pendingHash}">
-	  <span class="file-name">{{files[0].name}}</span>
-	  <img ng-show="fileType == 'image'" ngf-src="files[0]" class="" />
-	  <span class="file-type" ng-hide="fileType == 'image'">{{fileExtension}}</span>
+          <span class="file-name">{{files[0].name}}</span>
+          <img ng-show="fileType == 'image'" ngf-src="files[0]" class="" />
+          <span class="file-type" ng-hide="fileType == 'image'">{{fileExtension}}</span>
         </div>
         <p ng-show="!previousHash && !pendingHash">This file has not yet been time stamped in the blockchain. Would you like to timestamp it?</p>
         <p ng-show="pendingHash">
@@ -72,10 +72,10 @@
     <div ng-show="stamping && stampSuccess">
       <h1>Success</h1>
       <div class="panel success shadow">
-	<img src="img/check.svg" />
-	<p>Congratulations! You’ve successfuly timestamped your file into the blockchain.
-	  <a class="view-transaction" ng-click="openTransactionInBrowser(transactionId)">View Transaction <i class="fa fa-angle-right"></i></a>
-	</p>
+        <img src="img/check.svg" />
+        <p>Congratulations! You’ve successfuly timestamped your file into the blockchain.
+          <a class="view-transaction" ng-click="openTransactionInBrowser(transactionId)">View Transaction <i class="fa fa-angle-right"></i></a>
+        </p>
       </div>
       <button class="btn transparent" ng-click="cancel()">Stamp another File</button>
     </div>
