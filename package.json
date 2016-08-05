@@ -7,7 +7,8 @@
     "bower-install": "bower install",
     "gulp-watch": "gulp watch",
     "gulp-build": "gulp build",
-    "gulp-serve": "gulp serve"
+    "gulp-serve": "gulp serve",
+    "start": "gulp serve"
   },
   "repository": {
     "type": "git",
