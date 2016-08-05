@@ -15,8 +15,8 @@ function AppController($scope, $window, $log, $http, $interval, BitcoreService, 
     var vm = $scope;
 
     // view model variables
-    vm.previousTimestamps = undefined;
-    vm.pendingTimestamp = undefined;
+    vm.previousHash = undefined; // was this file previously stamped?
+    vm.pendingHash = undefined;  // is this file's stamp being processed?
     vm.files = undefined;
     vm.fileType = undefined;
     vm.fileExtension = undefined;
@@ -44,14 +44,13 @@ function AppController($scope, $window, $log, $http, $interval, BitcoreService, 
 
             FileService.hash(file)
                 .then(FileService.inBlockchain)
-                .then(function(timestamps) {
-                    vm.previousTimestamps = timestamps.map(function(ts) {
-                        ts.date = new Date(ts.timestamp*1000);
-                        return ts;
-                    });
+                .then(function(hashes) {
+                    hashes.previous.date = new Date(hashes.previous.timestamp*1000);
+                    vm.previousHash = hashes.previous;
+                    vm.pendingHash = hashes.pending;
                 })
-                .catch(function(err) {
-                    vm.pendingTimestamp = err.pendingTimestamp ? err.pendingTimestamp : undefined;
+                .catch(function(pending) {
+                    vm.pendingHash = hashes.pending;
                 });
         }
     });
@@ -60,8 +59,8 @@ function AppController($scope, $window, $log, $http, $interval, BitcoreService, 
     function cancel() {
         delete vm.files;
         vm.stampSuccess = false;
-        vm.previousTimestamps = [];
-        vm.pendingTimestamp = null;
+        vm.previousHash = undefined;
+        vm.pendingHash = undefined;
         vm.cancelStamp();
     }
 
@@ -129,14 +128,14 @@ function BitcoreService() {
 }
 
 function FileService($http, $q, $log, BitcoreService, Upload, SERVICE) {
-    var fileHash = undefined,   // fileHash represents the most recently hashed file.
-        pendingTimestamps = {}; // pendingTimestamps are the timestamps of transactions
-                                // that are currently pending on the blockchain.
+    var fileHash = undefined,    // fileHash represents the most recently hashed file.
+        pendingHashes = {};      // pendingHashes are the timestamps of transactions
+                                 // that are currently pending on the blockchain.
     return {
         stamp: stamp,
         hash: hash,
         inBlockchain: inBlockchain
-    }
+    };
 
     // Uses the BTC received from the user to create a new transaction object
     // that includes the hash of the uploaded file
@@ -162,7 +161,7 @@ function FileService($http, $q, $log, BitcoreService, Upload, SERVICE) {
         transaction2.sign(privateKey);
         return $http.get(SERVICE.BASE_PATH + '/send/' + transaction2.uncheckedSerialize())
             .then(function() {
-                pendingTimestamps[fileHash] = {date: new Date()};
+                pendingHashes[fileHash] = {date: new Date()};
                 return transaction2.id;
             })
             .catch(function() {
@@ -180,17 +179,18 @@ function FileService($http, $q, $log, BitcoreService, Upload, SERVICE) {
             });
     }
 
-    // Asks bitcore-node if the hash of the uploaded file has been timestamped in the bockchain before
+    // inBlockchain determines if the given hash has been previously in the blockchain
+    // or if its processing is still pending in the blockchain.
     function inBlockchain(fileHash) {
         return $http.get(SERVICE.BASE_PATH + '/hash/' + fileHash)
             .then(function(http) {
-                return http.data;
+                return $q.when({previous: http.data[0], pending: pendingHashes[fileHash] ? pendingHashes[fileHash] : undefined});
             })
             .catch(function(http) {
-                if (http.status == 404 && pendingTimestamps[fileHash]) {
-                    return $q.reject({pendingTimestamp: pendingTimestamps[fileHash]});
+                if (http.status == 404 && pendingHashes[fileHash]) {
+                    return $q.reject(pendingHashes[fileHash]);
                 }
-                return $q.reject({});
+                return $q.reject(undefined);
             });
     }
 }
