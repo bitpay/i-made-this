@@ -37,26 +37,26 @@ function AppController($scope, $window, BitcoreService, FileService, AddressMoni
     // and the block chain will be checked for this hash to determine
     // if there are previous or pending hashes.
     $scope.$watch('files', function() {
-        if (vm.files && vm.files[0]) {
-            var file = vm.files[0],
-                typeToks = file.type.split('/'),
-                nameToks = file.name.split('.'),
-                ext = nameToks[nameToks.length - 1];
-
-            vm.fileType = typeToks[0];
-            vm.fileExtension = ext;
-
-            FileService.hash(file)
-                .then(FileService.inBlockchain)
-                .then(function(hashes) {
-                    hashes.previous.date = new Date(hashes.previous.timestamp*1000);
-                    vm.previousHash = hashes.previous;
-                    vm.pendingHash = hashes.pending;
-                })
-                .catch(function(pending) {
-                    vm.pendingHash = pending;
-                });
+        if (!vm.files || vm.files.length === 0) {
+            return
         }
+        var file = vm.files[0],
+            typeTokens = file.type.split('/'),
+            nameTokens = file.name.split('.'),
+            ext = nameTokens[nameTokens.length - 1];
+        vm.fileType = typeTokens[0];
+        vm.fileExtension = ext;
+
+        FileService.hash(file)
+            .then(FileService.inBlockchain)
+            .then(function(hashes) {
+                hashes.previous.date = new Date(hashes.previous.timestamp*1000);
+                vm.previousHash = hashes.previous;
+                vm.pendingHash = hashes.pending;
+            })
+            .catch(function(pending) {
+                vm.pendingHash = pending;
+            });
     });
 
     // cancel re-initializes the app.
