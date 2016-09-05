@@ -63,9 +63,9 @@ StampingService.PREFIX = String.fromCharCode(0xff);
 StampingService.prototype._setDataPath = function() {
   $.checkState(this.node.services.bitcoind.spawn.datadir, 'bitcoind is expected to have a "spawn.datadir" property');
   var datadir = this.node.services.bitcoind.spawn.datadir;
-  if (this.node.network === Networks.livenet) {
+  if (this.node.network.name === Networks.livenet.name) {
     this.dataPath = datadir + '/bitcore-stamps.db';
-  } else if (this.node.network === Networks.testnet) {
+  } else if (this.node.network.name === Networks.testnet.name) {
     if (this.node.network.regtestEnabled) {
       this.dataPath = datadir + '/regtest/bitcore-stamps.db';
     } else {
