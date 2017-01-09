@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+<head>
+
+  <!-- Basic Page Needs
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta charset="utf-8">
+  <title>I Made This</title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!-- Mobile Meta Tags
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, minimum-scale=1, maximum-scale=1, initial-scale=1">
+
+  <!-- CSS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+  <!-- bower:css -->
+  <!-- endinject -->
+
+  <link rel="stylesheet" href="main.css">
+
+</head>
+<body ng-controller="AppController">
+
+  <!-- Add "success" class to container element for success screen -->
+  <div class="container">
+
+    <br>
+
+    <!-- Initial -->
+    <div class="initial" ng-hide="files[0]">
+      <h1>What did you make today?</h1>
+      <p>Drop your file here to upload</p>
+      <div ngf-drop ngf-select ng-model="files" class="dropbox" ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true"></div>
+      <button ngf-select ng-model="files" class="btn transparent" ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true">Upload file</button>
+    </div>
+
+    <!-- Preview -->
+    <div ng-show="files[0]">
+      <a href="#" class="close" ng-click="cancel()"></a>
+      <div ng-show="files[0] && !stamping">
+        <div class="preview clear-top shadow" ng-class="{'error': previousHash || pendingHash}">
+          <span class="file-name">{{files[0].name}}</span>
+          <img ng-show="fileType == 'image'" ngf-src="files[0]" class="" />
+          <span class="file-type" ng-hide="fileType == 'image'">{{fileExtension}}</span>
+        </div>
+        <p ng-show="!previousHash && !pendingHash">This file has not yet been time stamped in the blockchain. Would you like to timestamp it?</p>
+        <p ng-show="pendingHash">
+          A transaction containing the hash of this file has been sent to the bitcoin network for timestamping,
+          but has not yet been confirmed. Confirmations usually take approximately 10 minutes. Check back soon!
+        </p>
+        <p ng-show="previousHash">
+          This file was first timestamped into the blockchain on
+          <strong>{{previousHash.date | date:'medium'}}</strong>. Stamp again?
+        </p>
+        <button class="btn green" ng-click="stampFile()" ng-hide="pendingHash">Stamp it!</button>
+      </div>
+    </div>
+
+    <!-- Scan Screen -->
+    <div ng-hide="!stamping || stampSuccess">
+      <h1>Stamp it!</h1>
+      <div class="panel scan shadow ">
+        <qrcode class="qrcode" ng-hide="stampSuccess" data="{{address}}" size="200"></qrcode>
+      </div>
+      <p>To timestamp this file into the blockchain, use your favorite wallet to send 0.0005 BTC to this address: {{address}}</p>
+    </div>
+
+    <!-- Success Screen-->
+    <div ng-show="stamping && stampSuccess">
+      <h1>Success</h1>
+      <div class="panel success shadow">
+        <img src="img/check.svg" />
+        <p>Congratulations! You’ve successfuly timestamped your file into the blockchain.
+          <a class="view-transaction" ng-click="openTransactionInBrowser(transactionId)">View Transaction <i class="fa fa-angle-right"></i></a>
+        </p>
+      </div>
+      <button class="btn transparent" ng-click="cancel()">Stamp another File</button>
+    </div>
+
+  </div>
+
+  <!-- JavaScript
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+  <!-- bower:js -->
+  <!-- endinject -->
+
+  <script src="app.js"></script>
+
+  <!-- End Document
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+</body>
+</html>

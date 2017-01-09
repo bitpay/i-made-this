@@ -1,0 +1,42 @@
+---
+extends: eslint:all
+env:
+  node: true
+  es6: true
+rules:
+  padded-blocks: [2, "never"]
+  brace-style: 2
+  indent: [2, 4]
+  quotes: [2, "single"]
+  require-jsdoc: 0
+  space-before-function-paren: [2, "never"]
+  max-len: 0
+  no-use-before-define: 0
+  func-style: [2, "declaration"]
+  prefer-arrow-callback: 0
+  func-names: 0
+  consistent-this: [2, "self"]
+  quote-props: [2, "consistent-as-needed"]
+  no-sync: 0
+  newline-before-return: 0
+  no-magic-numbers: 0
+  consistent-return: 0
+  prefer-const: 0
+  init-declarations: 0
+  no-underscore-dangle: 0 # TODO: Convert this to enforce.
+  no-warning-comments: 1
+  no-shadow: 1
+  no-inline-comments: 0
+  prefer-template: 0
+  no-ternary: 0
+  multiline-ternary: 0
+  no-continue: 0
+  no-plusplus: 0
+  max-statements: 0
+  one-var: 1
+  vars-on-top: 0
+  prefer-reflect: 0 # What is this?
+  no-param-reassign: 0
+  id-length: 0
+  max-lines: 1
+  sort-vars: 0
